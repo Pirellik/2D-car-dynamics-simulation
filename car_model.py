@@ -9,6 +9,7 @@ class Car:
         self.velocity = Vector2(0.0, 0.0)
         self.angle = angle
         self.length = length
+        self.width = 2
         self.brake_deceleration = 10
         self.free_deceleration = 2
 
@@ -31,33 +32,87 @@ class Car:
         self.rear_wheels_mass = 100
         self.c_drag = 0.4257
 
-    def get_driver_input(self, throttle, gear, steering_angle):
+    def get_driver_input(self, throttle, gear, steering_angle, brakes):
         if throttle > 0:
             self.throttle = throttle
         else:
             self.throttle = 0
+        if brakes > 0:
+            self.brakes = brakes
+        else:
+            self.brakes = 0
         self.gear = gear
         self.steering = steering_angle
 
     def update(self, dt):
 
         drive_force = self.engine.get_torque() * self.diff_ratio * \
-                      self.gears[self.gear] * self.n / self.wheel_radius
+                      self.gears[self.gear] * (self.n / self.wheel_radius) * self.throttle
+        braking = self.brake_deceleration * self.brakes
         #print(self.velocity.length())
-        drag_force = - self.c_drag * self.velocity.length() * self.velocity.length()
-        rolling_resistance = - 12.8 * self.velocity.length()
-        print(self.velocity.length() * 10/3.6)
+        drag_force = - self.c_drag * self.velocity.x * self.velocity.x
+        rolling_resistance = - 12.8 * self.velocity.x
+        #print(self.velocity.length() * 10/3.6)
 
         long_force = drive_force + drag_force + rolling_resistance
+        if self.velocity.x > 0:
+            long_force -= braking
+        elif self.velocity.x <= 0 and braking > 0:
+            self.velocity.x = 0
+            long_force = 0
+
         #print(long_force)
         self.acceleration = long_force / self.mass
         self.wheel_rpm = self.velocity.length() / self.wheel_radius * 30 / pi
 
-        self.velocity += Vector2(self.acceleration * dt, 0)
+        max_speed_side = 20
+        max_speed_normal = 50
+        if self.velocity.x < max_speed_normal or self.acceleration < 0:
+            self.velocity += Vector2(self.acceleration * dt, 0)
+
+        if abs(self.velocity.y) > 0.01:
+            mi1 = 10.9
+            F = mi1 * (self.mass / 2) * 9.81
+            a = F / self.mass
+            print(self.velocity.y)
+            if a * dt > abs(self.velocity.y):
+                self.velocity.y = 0
+            else:
+                self.velocity.y -= np.sign(self.velocity.y)*a*dt
 
         if self.steering:
             turning_radius = self.length / tan(radians(self.steering))
             angular_velocity = self.velocity.x / turning_radius
+
+            F_centrifugal = (self.mass*self.velocity.x*self.velocity.x) / abs(turning_radius) #odsrodkowa
+            #print(F_od)
+            mi_front_side = 1.9
+            mi_back_side = 1.8
+            F_max_front = mi_front_side * (self.mass / 2) * 9.81
+            #print(F_max1)
+            F_max_back = mi_back_side * (self.mass / 2) * 9.81
+            F_back = 0
+            F_front = 0
+            if F_centrifugal > F_max_front:
+                #print(F_od, F_max1)
+                F_front = F_centrifugal/2 - F_max_front
+
+            if F_centrifugal > F_max_back:
+                F_back = F_centrifugal/2 - F_max_back
+
+
+            #print(F_rear, F_back)
+            inertia = (1/12)*self.mass*(self.length ** 2 + self.width ** 2)
+            torque = F_back*self.length/2 - F_front*self.length/2
+            omega = torque/inertia
+            angular_velocity += omega * dt
+
+
+            F = min(F_back, F_front)
+            a = F/self.mass
+            if abs(self.velocity.y) < max_speed_side:
+                self.velocity.y += np.sign(self.steering)*a*dt
+
         else:
             angular_velocity = 0
 
