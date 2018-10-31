@@ -24,7 +24,7 @@ class Car:
         self.engine = Engine(self)
 
         # Characteristics:
-        self.gears = {0: 0, 1: 2.66, 2: 1.78, 3: 1.3, 4: 1.0, 5: 0.74, 6: 0.5, -1: -2.9}
+        self.gears = {0: 0, 1: 3, 2: 2, 3: 1.5, 4: 1.25, 5: 1, 6: 0.75, -1: -2.9}
         self.diff_ratio = 3.42
         self.n = 0.8  # power transfer efficiency
         self.wheel_radius = 0.35
@@ -32,11 +32,9 @@ class Car:
         self.rear_wheels_mass = 100
         self.c_drag = 0.4257
 
-    def get_driver_input(self, throttle, gear, steering_angle, brakes):
-        if throttle > 0:
-            self.throttle = throttle
-        else:
-            self.throttle = 0
+    def get_driver_input(self, throttle, gear,  brakes, steering_angle,):
+        self.throttle = abs(throttle)
+
         if brakes > 0:
             self.brakes = brakes
         else:
@@ -52,29 +50,28 @@ class Car:
         #print(self.velocity.length())
         drag_force = - self.c_drag * self.velocity.x * self.velocity.x
         rolling_resistance = - 12.8 * self.velocity.x
-        #print(self.velocity.length() * 10/3.6)
+        #print(self.velocity.length() * 3.6)
 
         long_force = drive_force + drag_force + rolling_resistance
         if self.velocity.x > 0:
             long_force -= braking
-        elif self.velocity.x <= 0 and braking > 0:
-            self.velocity.x = 0
-            long_force = 0
+        elif self.velocity.x < 0:
+            long_force += braking
+        #print(long_force)
 
         #print(long_force)
         self.acceleration = long_force / self.mass
         self.wheel_rpm = self.velocity.length() / self.wheel_radius * 30 / pi
 
         max_speed_side = 20
-        max_speed_normal = 50
-        if self.velocity.x < max_speed_normal or self.acceleration < 0:
-            self.velocity += Vector2(self.acceleration * dt, 0)
+
+        self.velocity += Vector2(self.acceleration * dt, 0)
 
         if abs(self.velocity.y) > 0.01:
             mi1 = 10.9
             F = mi1 * (self.mass / 2) * 9.81
             a = F / self.mass
-            print(self.velocity.y)
+            #print(self.velocity.y)
             if a * dt > abs(self.velocity.y):
                 self.velocity.y = 0
             else:
@@ -124,8 +121,8 @@ class Engine:
     def __init__(self, car):
         self.car = car
 
-        self.rpm_lut = np.array([1000, 2000, 3000, 4000, 4500, 5000, 6000])
-        self.torque_lut = np.array([290, 325, 340, 350, 360, 345, 285])
+        self.rpm_lut = np.array([1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000])
+        self.torque_lut = np.array([180, 350, 550, 850, 1000, 1000, 900, 450, 0])
 
     def get_torque(self):
         wheels_rpm = self.car.wheel_rpm

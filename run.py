@@ -1,61 +1,37 @@
 import pygame
-from math import copysign
 from car_drawer import CarDrawer
 from car_model import Car
-from pygame.math import Vector2
-import xml.etree.ElementTree as ET
+from road import Road
+import pandas as pd
+from input_providers import RecordedInputProvider, JoystickInputProvider, KeyboardInputProvider
+from car_data_display import CarDataDisplay
 
-CIRCLE_TAG_NAME = '{http://www.w3.org/2000/svg}circle'
-
-def circleToPoint(circle):
-    const = 5
-    return (float(circle.attrib['cx'])*const, float(circle.attrib['cy'])*const)
-
-def readSVGFile(SVGFileName):
-    return ET.parse(SVGFileName)
-
-def getAllPoints(tree, style):
-    circles = []
-    for circle in tree.iter(CIRCLE_TAG_NAME):
-        if circle.attrib['style'] == style:
-            circles.append(circleToPoint(circle))
-
-    return circles
-    #return [circleToPoint(circle)
-    #        for circle in tree.iter(CIRCLE_TAG_NAME)]
 
 class Game:
-    def __init__(self):
+    def __init__(self, width, height):
         pygame.init()
-        pygame.display.set_caption("Car tutorial")
-        width = 640
-        height = 480
+        pygame.display.set_caption("Car model")
+        self.window_width = width
+        self.window_height = height
         self.screen = pygame.display.set_mode((width, height))
+        self.fps = 100
+
         self.clock = pygame.time.Clock()
         self.ticks = 60
         self.exit = False
-        tree = readSVGFile('./track2.svg')
 
-        styleRed = "fill:#000000;stroke:none"
-        self.trackPointsRight = getAllPoints(tree, styleRed)
-        styleBlack = "fill:#ff0000;stroke:none"
-        self.trackPointsLeft = getAllPoints(tree, styleBlack)
-        print(self.trackPointsRight)
-        print(self.trackPointsLeft)
-
-    def run(self):
-        car = Car(0, 0)
+    def record(self):
+        car = Car(self.window_width / 20, self.window_height / 20)
         car_drawer = CarDrawer()
-        ppu = 32
-
-        #joysticks = []
-        #for i in range(pygame.joystick.get_count()):
-        #    joysticks.append(pygame.joystick.Joystick(i))
-        #    joysticks[-1].init()
-        #    print("Detected pad:", joysticks[-1].get_name())
+        input_provider = JoystickInputProvider()
+        if not input_provider.joysticks:
+            input_provider = KeyboardInputProvider()
+        road = Road(car, 'track2.svg')
+        car_data_display = CarDataDisplay(car)
+        recorded_inputs = pd.DataFrame(columns=['Throttle', 'Brakes', 'Steering', 'Gear'])
 
         while not self.exit:
-            dt = self.clock.get_time() / 1000
+            dt = self.clock.tick(self.fps) / 1000
 
             # Event queue
             for event in pygame.event.get():
@@ -63,57 +39,88 @@ class Game:
                     self.exit = True
 
             # User input
-            throttle = 0
-            steering = 0
-            brakes = 0
+            throttle, gear, brakes, steering = input_provider.get_input()
+            car.get_driver_input(throttle, gear, brakes, steering)
+            car.update(dt)
 
-            if pygame.key.get_pressed()[pygame.K_UP]:
-                throttle = 5
-            else:
-                throttle = 0
+            # Recording
+            recorded_inputs = recorded_inputs.append({'Throttle': throttle,
+                                                      'Brakes': brakes,
+                                                      'Steering': steering,
+                                                      'Gear': gear}, ignore_index=True)
+            # Drawing
+            self.screen.fill((255, 255, 255))
+            road.draw(self.screen)
+            car_drawer.draw(self.screen, (self.window_width / 2, self.window_height / 2), -car.angle, car.steering)
+            car_data_display.display_data(self.screen)
+            pygame.display.flip()
 
-            if pygame.key.get_pressed()[pygame.K_DOWN]:
-                brakes = 5000
-            else:
-                brakes = 0
+        pygame.quit()
+        return recorded_inputs
 
-            if pygame.key.get_pressed()[pygame.K_LEFT]:
-                steering = 20
+    def play_recorded(self, recording_path):
+        car = Car(self.window_width / 20, self.window_height / 20)
+        car_drawer = CarDrawer()
+        input_provider = RecordedInputProvider(recording_path)
+        road = Road(car, 'track2.svg')
+        car_data_display = CarDataDisplay(car)
 
-            if pygame.key.get_pressed()[pygame.K_RIGHT]:
-                steering = -20
+        while not self.exit:
+            dt = self.clock.tick(self.fps) / 1000
 
-            #throttle = - joysticks[-1].get_axis(3)
-            #steering = - joysticks[-1].get_axis(4) * 30
+            # Event queue
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.exit = True
 
-            # Logic
-            car.get_driver_input(throttle, 1, steering, brakes)
+            # User input
+            car_input = input_provider.get_input()
+            if car_input is None: break
+            car.get_driver_input(car_input[0], car_input[1], car_input[2], car_input[3])
             car.update(dt)
 
             # Drawing
             self.screen.fill((255, 255, 255))
-            pos = car.position * 10
-            #if pos.x < 10:
-            #    pos.x = 10
-            #elif pos.x > 620:
-            #    pos.x = 620
-
-            #if pos.y < 10:
-            #    pos.y = 10
-            #elif pos.y > 470:
-            #    pos.y = 470
-
-            pos.x = pos.x % 640
-            pos.y = pos.y % 480
-
-            car_drawer.draw(self.screen, pos, -car.angle, car.steering)
-            pygame.draw.polygon(self.screen, (0, 255, 0), (self.trackPointsLeft), 2)
-            pygame.draw.polygon(self.screen, (255, 255, 0), (self.trackPointsRight), 2)
+            road.draw(self.screen)
+            car_drawer.draw(self.screen, (self.window_width / 2, self.window_height / 2), -car.angle, car.steering)
+            car_data_display.display_data(self.screen)
             pygame.display.flip()
-            self.clock.tick(self.ticks)
+
+        pygame.quit()
+
+    def run(self):
+        car = Car(self.window_width / 20, self.window_height / 20)
+        car_drawer = CarDrawer()
+        input_provider = JoystickInputProvider()
+        if not input_provider.joysticks:
+            input_provider = KeyboardInputProvider()
+        road = Road(car, 'track2.svg')
+        car_data_display = CarDataDisplay(car)
+
+        while not self.exit:
+            dt = self.clock.tick(self.fps) / 1000
+
+            # Event queue
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.exit = True
+
+            # User input
+            car_input = input_provider.get_input()
+            car.get_driver_input(car_input[0], car_input[1], car_input[2], car_input[3])
+            car.update(dt)
+
+            # Drawing
+            self.screen.fill((255, 255, 255))
+            road.draw(self.screen)
+            car_drawer.draw(self.screen, (self.window_width / 2, self.window_height / 2), -car.angle, car.steering)
+            car_data_display.display_data(self.screen)
+            pygame.display.flip()
         pygame.quit()
 
 
 if __name__ == '__main__':
-    game = Game()
-    game.run()
+    game = Game(1366, 768)
+    #game.record().to_csv("run.csv")
+    game.play_recorded('run.csv')
+    #game.run()
