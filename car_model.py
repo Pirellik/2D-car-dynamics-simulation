@@ -68,7 +68,7 @@ class Car:
         self.velocity += Vector2(self.acceleration * dt, 0)
 
         if abs(self.velocity.y) > 0.01:
-            mi1 = 10.9
+            mi1 = 5.9
             F = mi1 * (self.mass / 2) * 9.81
             a = F / self.mass
             #print(self.velocity.y)
@@ -83,8 +83,8 @@ class Car:
 
             F_centrifugal = (self.mass*self.velocity.x*self.velocity.x) / abs(turning_radius) #odsrodkowa
             #print(F_od)
-            mi_front_side = 1.9
-            mi_back_side = 1.8
+            mi_front_side = 0.9
+            mi_back_side = 0.8
             F_max_front = mi_front_side * (self.mass / 2) * 9.81
             #print(F_max1)
             F_max_back = mi_back_side * (self.mass / 2) * 9.81
