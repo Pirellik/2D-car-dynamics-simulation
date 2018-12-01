@@ -16,6 +16,7 @@ class CarDrawer:
         rear_center = (pos_x - self.length * 3 / 10, pos_y)
 
     def draw(self, screen, car):
+        car_color = (181, 25, 253)
         pos_x, pos_y = 1366 / 2, 768 / 2
         angle = -car.angle
         steering = car.steering
@@ -46,29 +47,35 @@ class CarDrawer:
              (pos_x - 4.5 / 10 * self.length + self.length * 3 / 10, pos_y - self.width), (pos_x - 4.5 / 10 * self.length + self.length * 3 / 10, pos_y - self.width * 5 / 6)])
         rear_center = (pos_x, pos_y)
 
-        pygame.draw.aalines(screen, (255, 0, 0), False, [(x - car.position.x * 10, y - car.position.y * 10) for x, y in self.trace])
+        pygame.draw.lines(screen, (0, 0, 255), False, [(x - car.position.x * 10, y - car.position.y * 10) for x, y in self.trace], 2)
         car_model = rotate(self.car_model, angle, rear_center)
         x, y = car_model.exterior.xy
-        pygame.draw.polygon(screen, (0, 255, 0), [(xx, yy) for xx, yy in zip(x, y)], 2)
+        pygame.draw.polygon(screen, car_color, [(xx, yy) for xx, yy in zip(x, y)], 2)
         front_axle = rotate(front_axle, angle, rear_center)
         x_axle, y_axle = front_axle.exterior.xy
-        pygame.draw.polygon(screen, (0, 255, 0), [(xx, yy) for xx, yy in zip(x_axle, y_axle)], 2)
+
+        front_center = ((x_axle[0] + x_axle[1]) / 2, (y_axle[0] + y_axle[1]) / 2)
+        car.front_center = front_center
+
+        pygame.draw.polygon(screen, car_color, [(xx, yy) for xx, yy in zip(x_axle, y_axle)], 2)
         front_tire_1 = rotate(front_tire_1, angle, rear_center)
         front_tire_1 = rotate(front_tire_1, - steering, (x_axle[0], y_axle[0]))
         x, y = front_tire_1.exterior.xy
-        pygame.draw.polygon(screen, (0, 255, 0), [(xx, yy) for xx, yy in zip(x, y)], 2)
+        pygame.draw.polygon(screen, car_color, [(xx, yy) for xx, yy in zip(x, y)], 2)
         front_tire_2 = rotate(front_tire_2, angle, rear_center)
         front_tire_2 = rotate(front_tire_2, - steering, (x_axle[1], y_axle[1]))
         x, y = front_tire_2.exterior.xy
-        pygame.draw.polygon(screen, (0, 255, 0), [(xx, yy) for xx, yy in zip(x, y)], 2)
+        pygame.draw.polygon(screen, car_color, [(xx, yy) for xx, yy in zip(x, y)], 2)
         rear_axle = rotate(rear_axle, angle, rear_center)
         x, y = rear_axle.exterior.xy
-        pygame.draw.polygon(screen, (0, 255, 0), [(xx, yy) for xx, yy in zip(x, y)], 2)
+        pygame.draw.polygon(screen, car_color, [(xx, yy) for xx, yy in zip(x, y)], 2)
         rear_tire_1 = rotate(rear_tire_1, angle, rear_center)
         x, y = rear_tire_1.exterior.xy
-        pygame.draw.polygon(screen, (0, 255, 0), [(xx, yy) for xx, yy in zip(x, y)], 2)
+        pygame.draw.polygon(screen, car_color, [(xx, yy) for xx, yy in zip(x, y)], 2)
         rear_tire_2 = rotate(rear_tire_2, angle, rear_center)
         x, y = rear_tire_2.exterior.xy
-        pygame.draw.polygon(screen, (0, 255, 0), [(xx, yy) for xx, yy in zip(x, y)], 2)
+        pygame.draw.polygon(screen, car_color, [(xx, yy) for xx, yy in zip(x, y)], 2)
         rect = pygame.Rect(rear_center[0], rear_center[1], 5, 5)
+        pygame.draw.rect(screen, (255, 0, 0), rect)
+        rect = pygame.Rect(front_center[0], front_center[1], 5, 5)
         pygame.draw.rect(screen, (255, 0, 0), rect)

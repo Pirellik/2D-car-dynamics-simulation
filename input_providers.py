@@ -1,5 +1,6 @@
 import pandas as pd
 import pygame
+from pid_controller import PidController
 
 
 class InputProvider:
@@ -88,3 +89,12 @@ class KeyboardInputProvider(InputProvider):
             self.gear_timer = 0
 
         return throttle, self.gear, brakes, steering
+
+
+class AutonomousDriver(InputProvider):
+    def __init__(self):
+        self.pid_controller = PidController(3.5, 0.007, 5)
+        self.line_error = 0
+
+    def get_input(self):
+        return 1, 1, 0, self.pid_controller.get_control(self.line_error)

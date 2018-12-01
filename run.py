@@ -3,8 +3,9 @@ from car_drawer import CarDrawer
 from car_model import Car
 from road import Road
 import pandas as pd
-from input_providers import RecordedInputProvider, JoystickInputProvider, KeyboardInputProvider
+from input_providers import *
 from car_data_display import CarDataDisplay
+from shapely.geometry import Point, Polygon, LineString
 
 
 class Game:
@@ -26,7 +27,7 @@ class Game:
         input_provider = JoystickInputProvider()
         if not input_provider.joysticks:
             input_provider = KeyboardInputProvider()
-        road = Road(car, 'track2.svg')
+        road = Road(car, 'track3.svg')
         car_data_display = CarDataDisplay(car)
         recorded_inputs = pd.DataFrame(columns=['Throttle', 'Brakes', 'Steering', 'Gear'])
 
@@ -49,7 +50,7 @@ class Game:
                                                       'Steering': steering,
                                                       'Gear': gear}, ignore_index=True)
             # Drawing
-            self.screen.fill((255, 255, 255))
+            self.screen.fill((0, 0, 0))
             road.draw(self.screen)
             car_drawer.draw(self.screen, car)
             car_data_display.display_data(self.screen)
@@ -62,7 +63,7 @@ class Game:
         car = Car(self.window_width / 20, self.window_height / 20)
         car_drawer = CarDrawer()
         input_provider = RecordedInputProvider(recording_path)
-        road = Road(car, 'track2.svg')
+        road = Road(car, 'track3.svg')
         car_data_display = CarDataDisplay(car)
 
         while not self.exit:
@@ -80,7 +81,7 @@ class Game:
             car.update(dt)
 
             # Drawing
-            self.screen.fill((255, 255, 255))
+            self.screen.fill((0, 0, 0))
             road.draw(self.screen)
             car_drawer.draw(self.screen, car)
             car_data_display.display_data(self.screen)
@@ -89,12 +90,14 @@ class Game:
         pygame.quit()
 
     def run(self):
+
         car = Car(self.window_width / 20, self.window_height / 20)
+        road = Road(car, 'track3.svg')
+        car.position.x, car.position.y = road.track_points_left[0][0] / 10, road.track_points_left[0][1] / 10
         car_drawer = CarDrawer()
         input_provider = JoystickInputProvider()
         if not input_provider.joysticks:
             input_provider = KeyboardInputProvider()
-        road = Road(car, 'track2.svg')
         car_data_display = CarDataDisplay(car)
 
         while not self.exit:
@@ -111,7 +114,41 @@ class Game:
             car.update(dt)
 
             # Drawing
-            self.screen.fill((255, 255, 255))
+            self.screen.fill((0, 0, 0))
+            road.draw(self.screen)
+            car_drawer.draw(self.screen, car)
+            car_data_display.display_data(self.screen)
+            pygame.display.flip()
+        pygame.quit()
+
+    def run_pid_controller(self):
+        car = Car(self.window_width / 20, self.window_height / 20)
+        road = Road(car, 'track3.svg')
+        car.position.x, car.position.y = road.track_points_left[0][0] / 10, road.track_points_left[0][1] / 10
+        car_drawer = CarDrawer()
+        car_data_display = CarDataDisplay(car)
+        input_provider = AutonomousDriver()
+
+        while not self.exit:
+            dt = self.clock.tick(self.fps) / 1000
+
+            # Event queue
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.exit = True
+
+            if Polygon(road.track_points_left1).contains(Point(car.front_center)):
+                input_provider.line_error = - LineString(road.track_points_left1).distance(Point(car.front_center))
+            else:
+                input_provider.line_error = LineString(road.track_points_left1).distance(Point(car.front_center))
+
+            # User input
+            car_input = input_provider.get_input()
+            car.get_driver_input(car_input[0], car_input[1], car_input[2], car_input[3])
+            car.update(dt)
+
+            # Drawing
+            self.screen.fill((0, 0, 0))
             road.draw(self.screen)
             car_drawer.draw(self.screen, car)
             car_data_display.display_data(self.screen)
@@ -123,4 +160,5 @@ if __name__ == '__main__':
     game = Game(1366, 768)
     #game.record().to_csv("run.csv")
     #game.play_recorded('run.csv')
+    #game.run_pid_controller()
     game.run()
