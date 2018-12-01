@@ -4,36 +4,51 @@ import pygame
 
 
 class CarDrawer:
-    def __init__(self, length=50, width=20):
+    def __init__(self, length=50, width=20, init_position=(1366/2, 768/2)):
         self.length = length
         self.width = width
-
-    def draw(self, screen, position, angle, steering):
-        pos_x, pos_y = position
-        car = Polygon([(pos_x - self.length / 2, pos_y - self.width / 2), (pos_x - self.length / 2, pos_y + self.width / 2),
-                         (pos_x + self.length / 2, pos_y + self.width / 2), (pos_x + self.length / 2, pos_y - self.width / 2)])
-        front_axle = Polygon(
-            [(pos_x + self.length * 3 / 10, pos_y + self.width * 5 / 6), (pos_x + self.length * 3 / 10, pos_y - self.width * 5 / 6),
-             (pos_x + self.length * 3 / 10, pos_y + self.width * 5 / 6)])
-        front_tire_1 = Polygon(
-            [(pos_x + self.length * 1.5 / 10, pos_y + self.width * 5 / 6), (pos_x + self.length * 1.5 / 10, pos_y + self.width),
-             (pos_x + 4.5 / 10 * self.length, pos_y + self.width), (pos_x + 4.5 / 10 * self.length, pos_y + self.width * 5 / 6)])
-        front_tire_2 = Polygon(
-            [(pos_x + self.length * 1.5 / 10, pos_y - self.width * 5 / 6), (pos_x + self.length * 1.5 / 10, pos_y - self.width),
-             (pos_x + 4.5 / 10 * self.length, pos_y - self.width), (pos_x + 4.5 / 10 * self.length, pos_y - self.width * 5 / 6)])
-        rear_axle = Polygon(
-            [(pos_x - self.length * 3 / 10, pos_y + self.width * 5 / 6), (pos_x - self.length * 3 / 10, pos_y - self.width * 5 / 6),
-             (pos_x - self.length * 3 / 10, pos_y + self.width * 5 / 6)])
-        rear_tire_1 = Polygon(
-            [(pos_x - self.length * 1.5 / 10, pos_y + self.width * 5 / 6), (pos_x - self.length * 1.5 / 10, pos_y + self.width),
-             (pos_x - 4.5 / 10 * self.length, pos_y + self.width), (pos_x - 4.5 / 10 * self.length, pos_y + self.width * 5 / 6)])
-        rear_tire_2 = Polygon(
-            [(pos_x - self.length * 1.5 / 10, pos_y - self.width * 5 / 6), (pos_x - self.length * 1.5 / 10, pos_y - self.width),
-             (pos_x - 4.5 / 10 * self.length, pos_y - self.width), (pos_x - 4.5 / 10 * self.length, pos_y - self.width * 5 / 6)])
+        self.trace = []
+        self.init_position = init_position
+        pos_x = self.init_position[0]
+        pos_y = self.init_position[1]
+        self.car_model = Polygon([(pos_x - self.length / 2 + self.length * 3 / 10, pos_y - self.width / 2), (pos_x - self.length / 2 + self.length * 3 / 10, pos_y + self.width / 2),
+                         (pos_x + self.length / 2 + self.length * 3 / 10, pos_y + self.width / 2), (pos_x + self.length / 2 + self.length * 3 / 10, pos_y - self.width / 2)])
         rear_center = (pos_x - self.length * 3 / 10, pos_y)
 
-        car = rotate(car, angle, rear_center)
-        x, y = car.exterior.xy
+    def draw(self, screen, car):
+        pos_x, pos_y = 1366 / 2, 768 / 2
+        angle = -car.angle
+        steering = car.steering
+        if not self.trace:
+            self.trace.append((10 * car.position.x + 1366/2, 10 * car.position.y + 768/2))
+            self.trace.append((10 * car.position.x + 1366 / 2, 10 * car.position.y + 768 / 2))
+        else:
+            self.trace.append((10 * car.position.x + 1366 / 2, 10 * car.position.y + 768 / 2))
+
+
+        front_axle = Polygon(
+            [(pos_x + self.length * 3 / 10 + self.length * 3 / 10, pos_y + self.width * 5 / 6), (pos_x + self.length * 3 / 10 + self.length * 3 / 10, pos_y - self.width * 5 / 6),
+             (pos_x + self.length * 3 / 10 + self.length * 3 / 10, pos_y + self.width * 5 / 6)])
+        front_tire_1 = Polygon(
+            [(pos_x + self.length * 1.5 / 10 + self.length * 3 / 10, pos_y + self.width * 5 / 6), (pos_x + self.length * 1.5 / 10 + self.length * 3 / 10, pos_y + self.width),
+             (pos_x + 4.5 / 10 * self.length + self.length * 3 / 10, pos_y + self.width), (pos_x + 4.5 / 10 * self.length + self.length * 3 / 10, pos_y + self.width * 5 / 6)])
+        front_tire_2 = Polygon(
+            [(pos_x + self.length * 1.5 / 10 + self.length * 3 / 10, pos_y - self.width * 5 / 6), (pos_x + self.length * 1.5 / 10 + self.length * 3 / 10, pos_y - self.width),
+             (pos_x + 4.5 / 10 * self.length + self.length * 3 / 10, pos_y - self.width), (pos_x + 4.5 / 10 * self.length + self.length * 3 / 10, pos_y - self.width * 5 / 6)])
+        rear_axle = Polygon(
+            [(pos_x - self.length * 3 / 10 + self.length * 3 / 10, pos_y + self.width * 5 / 6), (pos_x - self.length * 3 / 10 + self.length * 3 / 10, pos_y - self.width * 5 / 6),
+             (pos_x - self.length * 3 / 10 + self.length * 3 / 10, pos_y + self.width * 5 / 6)])
+        rear_tire_1 = Polygon(
+            [(pos_x - self.length * 1.5 / 10 + self.length * 3 / 10, pos_y + self.width * 5 / 6), (pos_x - self.length * 1.5 / 10 + self.length * 3 / 10, pos_y + self.width),
+             (pos_x - 4.5 / 10 * self.length + self.length * 3 / 10, pos_y + self.width), (pos_x - 4.5 / 10 * self.length + self.length * 3 / 10, pos_y + self.width * 5 / 6)])
+        rear_tire_2 = Polygon(
+            [(pos_x - self.length * 1.5 / 10 + self.length * 3 / 10, pos_y - self.width * 5 / 6), (pos_x - self.length * 1.5 / 10 + self.length * 3 / 10, pos_y - self.width),
+             (pos_x - 4.5 / 10 * self.length + self.length * 3 / 10, pos_y - self.width), (pos_x - 4.5 / 10 * self.length + self.length * 3 / 10, pos_y - self.width * 5 / 6)])
+        rear_center = (pos_x, pos_y)
+
+        pygame.draw.aalines(screen, (255, 0, 0), False, [(x - car.position.x * 10, y - car.position.y * 10) for x, y in self.trace])
+        car_model = rotate(self.car_model, angle, rear_center)
+        x, y = car_model.exterior.xy
         pygame.draw.polygon(screen, (0, 255, 0), [(xx, yy) for xx, yy in zip(x, y)], 2)
         front_axle = rotate(front_axle, angle, rear_center)
         x_axle, y_axle = front_axle.exterior.xy

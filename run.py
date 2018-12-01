@@ -51,7 +51,7 @@ class Game:
             # Drawing
             self.screen.fill((255, 255, 255))
             road.draw(self.screen)
-            car_drawer.draw(self.screen, (self.window_width / 2, self.window_height / 2), -car.angle, car.steering)
+            car_drawer.draw(self.screen, car)
             car_data_display.display_data(self.screen)
             pygame.display.flip()
 
@@ -82,7 +82,7 @@ class Game:
             # Drawing
             self.screen.fill((255, 255, 255))
             road.draw(self.screen)
-            car_drawer.draw(self.screen, (self.window_width / 2, self.window_height / 2), -car.angle, car.steering)
+            car_drawer.draw(self.screen, car)
             car_data_display.display_data(self.screen)
             pygame.display.flip()
 
@@ -113,7 +113,7 @@ class Game:
             # Drawing
             self.screen.fill((255, 255, 255))
             road.draw(self.screen)
-            car_drawer.draw(self.screen, (self.window_width / 2, self.window_height / 2), -car.angle, car.steering)
+            car_drawer.draw(self.screen, car)
             car_data_display.display_data(self.screen)
             pygame.display.flip()
         pygame.quit()
@@ -122,5 +122,5 @@ class Game:
 if __name__ == '__main__':
     game = Game(1366, 768)
     #game.record().to_csv("run.csv")
-    game.play_recorded('run.csv')
-    #game.run()
+    #game.play_recorded('run.csv')
+    game.run()
