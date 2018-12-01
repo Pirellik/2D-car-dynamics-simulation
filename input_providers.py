@@ -55,13 +55,13 @@ class JoystickInputProvider(InputProvider):
 
 class KeyboardInputProvider(InputProvider):
     def __init__(self):
-        pass
+        self.gear = 0
 
     def get_input(self):
         steering = 0
 
         if pygame.key.get_pressed()[pygame.K_UP]:
-            throttle = 1
+            throttle = 2
         else:
             throttle = 0
 
@@ -76,4 +76,10 @@ class KeyboardInputProvider(InputProvider):
         if pygame.key.get_pressed()[pygame.K_RIGHT]:
             steering = -20
 
-        return throttle, 1, brakes, steering
+        if pygame.key.get_pressed()[pygame.K_q] and self.gear < 6:
+            self.gear += 1
+
+        if pygame.key.get_pressed()[pygame.K_a] and self.gear > -1:
+            self.gear -= 1
+
+        return throttle, self.gear, brakes, steering
