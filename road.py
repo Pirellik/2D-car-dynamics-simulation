@@ -16,6 +16,12 @@ def generate_list_of_factors(size, deviation):
     return list_of_factors
 
 
+class RoadChunk:
+    def __init__(self, point_1, point_2, point_3, point_4):
+        self.polygon = Polygon([point_1, point_2, point_3, point_4])
+        self.is_active = False
+
+
 class Road:
     def __init__(self, car, road_file_path='track3.svg', resize_factor=2.5):
         self.car = car
@@ -77,6 +83,11 @@ class Road:
         self.inner_road_for_drawing = list(range(len(self.inner_road)))
         self.outer_road_for_drawing = list(range(len(self.outer_road)))
 
+        self.road_chunks = []
+
+
+
+
         self.path_deflexions = [0.5 for _ in range(len(self.path))]
 
     def modify_path(self, index, deflexion, number_of_neighbours, deviation):
@@ -116,6 +127,22 @@ class Road:
             self.inner_road_for_drawing[ind] = np.array(point) - np.array([self.car.position.x, self.car.position.y]) * 10 + [1366/2, 768/2]
         for ind, point in enumerate(self.outer_road):
             self.outer_road_for_drawing[ind] = np.array(point) - np.array([self.car.position.x, self.car.position.y]) * 10 + [1366/2, 768/2]
+
+        for index in range(len(self.outer_road_for_drawing) - 1, -1, -1):
+            try:
+                self.road_chunks[index].polygon = Polygon([self.inner_road_for_drawing[index - 1], self.outer_road_for_drawing[index - 1], self.outer_road_for_drawing[index], self.inner_road_for_drawing[index]])
+            except:
+                self.road_chunks.append(
+                    RoadChunk(self.inner_road_for_drawing[index - 1], self.outer_road_for_drawing[index - 1],
+                     self.outer_road_for_drawing[index], self.inner_road_for_drawing[index]))
+
+        for chunk in self.road_chunks:
+            if chunk.polygon.contains(Point(1366/2, 768/2)):
+                chunk.is_active = True
+            if chunk.is_active:
+                polygon = chunk.polygon.exterior.xy
+                polygon = [(x, y) for x, y in zip(polygon[0], polygon[1])]
+                pygame.draw.polygon(screen, (0, 35, 0), polygon)
 
         pygame.draw.polygon(screen, (0, 255, 0), self.path_for_drawing, 2)
         pygame.draw.polygon(screen, (255, 0, 0), self.inner_road_for_drawing, 2)
