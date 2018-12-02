@@ -124,11 +124,15 @@ class Game:
     def run_pid_controller(self):
         car = Car(self.window_width / 20, self.window_height / 20)
         road = Road(car, 'track3.svg')
+        road.modify_path(0, -10, 50, 15)
+        road.modify_path(90, 7, 100, 8)
+        road.modify_path(100, 7, 100, 8)
+        road.modify_path(120, -7, 100, 8)
+        road.modify_path(140, -7, 100, 8)
         car.position.x, car.position.y = road.path[0][0] / 10, road.path[0][1] / 10
         car_drawer = CarDrawer()
         car_data_display = CarDataDisplay(car)
         input_provider = AutonomousDriver()
-        road.modify_path(35, -10, 70, 5)
 
         while not self.exit:
             dt = self.clock.tick(self.fps) / 1000

@@ -77,13 +77,22 @@ class Road:
         self.inner_road_for_drawing = list(range(len(self.inner_road)))
         self.outer_road_for_drawing = list(range(len(self.outer_road)))
 
+        self.path_deflexions = [0.5 for _ in range(len(self.path))]
+
     def modify_path(self, index, deflexion, number_of_neighbours, deviation):
+        if index + number_of_neighbours / 2 > len(self.path) - 1:
+            index = index - len(self.path) - 1
         factors = generate_list_of_factors(number_of_neighbours, deviation)
         for i, factor in enumerate(factors):
-            self.path[index + i - floor(len(factors) / 2)] = 0.5 * ((1 + factor * deflexion / 11) * self.outer_road[index + i - floor(len(factors) / 2)] + (1 - factor * deflexion / 11) * self.inner_road[index + i - floor(len(factors) / 2)])
-            self.path_for_drawing[index + i - floor(len(factors) / 2)] = 0.5 * ((1 + factor * deflexion / 11) * self.outer_road[index + i - floor(len(factors) / 2)] + (1 - factor * deflexion / 11) * self.inner_road[index + i - floor(len(factors) / 2)])
+            self.path_deflexions[index + i - floor(len(factors) / 2)] += factor * deflexion / 20
+            if self.path_deflexions[index + i - floor(len(factors) / 2)] > 0.9:
+                self.path_deflexions[index + i - floor(len(factors) / 2)] = 0.9
+            if self.path_deflexions[index + i - floor(len(factors) / 2)] < 0.1:
+                self.path_deflexions[index + i - floor(len(factors) / 2)] = 0.1
 
-
+        for j in range(len(self.path)):
+            self.path[j] = self.path_deflexions[j] * self.outer_road[j] + (1 - self.path_deflexions[j]) * self.inner_road[j]
+            self.path_for_drawing[j] = self.path_deflexions[j] * self.outer_road[j] + (1 - self.path_deflexions[j]) * self.inner_road[j]
 
     @staticmethod
     def circle_to_point(circle):
