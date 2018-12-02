@@ -160,5 +160,5 @@ if __name__ == '__main__':
     game = Game(1366, 768)
     #game.record().to_csv("run.csv")
     #game.play_recorded('run.csv')
-    #game.run_pid_controller()
-    game.run()
+    game.run_pid_controller()
+    #game.run()

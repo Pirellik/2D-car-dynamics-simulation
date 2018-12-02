@@ -13,19 +13,19 @@ class CarDrawer:
         pos_y = self.init_position[1]
         self.car_model = Polygon([(pos_x - self.length / 2 + self.length * 3 / 10, pos_y - self.width / 2), (pos_x - self.length / 2 + self.length * 3 / 10, pos_y + self.width / 2),
                          (pos_x + self.length / 2 + self.length * 3 / 10, pos_y + self.width / 2), (pos_x + self.length / 2 + self.length * 3 / 10, pos_y - self.width / 2)])
-        rear_center = (pos_x - self.length * 3 / 10, pos_y)
 
     def draw(self, screen, car):
         car_color = (181, 25, 253)
         pos_x, pos_y = 1366 / 2, 768 / 2
         angle = -car.angle
         steering = car.steering
+        if len(self.trace) >= 2500:
+            self.trace.pop(0)
         if not self.trace:
             self.trace.append((10 * car.position.x + 1366/2, 10 * car.position.y + 768/2))
             self.trace.append((10 * car.position.x + 1366 / 2, 10 * car.position.y + 768 / 2))
         else:
             self.trace.append((10 * car.position.x + 1366 / 2, 10 * car.position.y + 768 / 2))
-
 
         front_axle = Polygon(
             [(pos_x + self.length * 3 / 10 + self.length * 3 / 10, pos_y + self.width * 5 / 6), (pos_x + self.length * 3 / 10 + self.length * 3 / 10, pos_y - self.width * 5 / 6),
