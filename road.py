@@ -3,7 +3,7 @@ import pygame
 import numpy as np
 from math import sqrt, sin, cos, e, floor
 import matplotlib.pyplot as plt
-from shapely.geometry import Polygon, Point
+from shapely.geometry import Polygon, Point, LineString
 
 
 CIRCLE_TAG_NAME = '{http://www.w3.org/2000/svg}circle'
@@ -120,7 +120,7 @@ class Road:
                 circles.append(self.circle_to_point(circle))
         return circles
 
-    def draw(self, screen):
+    def draw(self, screen, car_drawer):
         for ind, point in enumerate(self.path):
             self.path_for_drawing[ind] = np.array(point) - np.array([self.car.position.x, self.car.position.y]) * 10 + [1366/2, 768/2]
         for ind, point in enumerate(self.inner_road):
@@ -136,8 +136,9 @@ class Road:
                     RoadChunk(self.inner_road_for_drawing[index - 1], self.outer_road_for_drawing[index - 1],
                      self.outer_road_for_drawing[index], self.inner_road_for_drawing[index]))
 
+        trace = LineString([(x - self.car.position.x * 10, y - self.car.position.y * 10) for x, y in car_drawer.trace])
         for chunk in self.road_chunks:
-            if chunk.polygon.contains(Point(1366/2, 768/2)):
+            if trace.intersects(chunk.polygon):
                 chunk.is_active = True
             if chunk.is_active:
                 polygon = chunk.polygon.exterior.xy
@@ -147,3 +148,4 @@ class Road:
         pygame.draw.polygon(screen, (0, 255, 0), self.path_for_drawing, 2)
         pygame.draw.polygon(screen, (255, 0, 0), self.inner_road_for_drawing, 2)
         pygame.draw.polygon(screen, (255, 0, 0), self.outer_road_for_drawing, 2)
+

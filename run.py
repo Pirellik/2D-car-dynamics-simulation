@@ -154,7 +154,7 @@ class Game:
 
             # Drawing
             self.screen.fill((0, 0, 0))
-            road.draw(self.screen)
+            road.draw(self.screen, car_drawer)
             car_drawer.draw(self.screen, car)
             car_data_display.display_data(self.screen)
             pygame.display.flip()
