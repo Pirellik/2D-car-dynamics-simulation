@@ -138,8 +138,9 @@ class Road:
 
         trace = LineString([(x - self.car.position.x * 10, y - self.car.position.y * 10) for x, y in car_drawer.trace])
         for chunk in self.road_chunks:
-            if trace.intersects(chunk.polygon):
-                chunk.is_active = True
+            if not chunk.is_active:
+                if trace.intersects(chunk.polygon):
+                    chunk.is_active = True
             if chunk.is_active:
                 polygon = chunk.polygon.exterior.xy
                 polygon = [(x, y) for x, y in zip(polygon[0], polygon[1])]
