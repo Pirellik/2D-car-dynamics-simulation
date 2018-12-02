@@ -93,7 +93,7 @@ class Game:
 
         car = Car(self.window_width / 20, self.window_height / 20)
         road = Road(car, 'track3.svg')
-        car.position.x, car.position.y = road.track_points_left[0][0] / 10, road.track_points_left[0][1] / 10
+        car.position.x, car.position.y = road.path[0][0] / 10, road.path[0][1] / 10
         car_drawer = CarDrawer()
         input_provider = JoystickInputProvider()
         if not input_provider.joysticks:
@@ -124,10 +124,11 @@ class Game:
     def run_pid_controller(self):
         car = Car(self.window_width / 20, self.window_height / 20)
         road = Road(car, 'track3.svg')
-        car.position.x, car.position.y = road.track_points_left[0][0] / 10, road.track_points_left[0][1] / 10
+        car.position.x, car.position.y = road.path[0][0] / 10, road.path[0][1] / 10
         car_drawer = CarDrawer()
         car_data_display = CarDataDisplay(car)
         input_provider = AutonomousDriver()
+        road.modify_path(35, -10, 70, 5)
 
         while not self.exit:
             dt = self.clock.tick(self.fps) / 1000
@@ -137,10 +138,10 @@ class Game:
                 if event.type == pygame.QUIT:
                     self.exit = True
 
-            if Polygon(road.track_points_left1).contains(Point(car.front_center)):
-                input_provider.line_error = - LineString(road.track_points_left1).distance(Point(car.front_center))
+            if Polygon(road.path_for_drawing).contains(Point(car.front_center)):
+                input_provider.line_error = - LineString(road.path_for_drawing).distance(Point(car.front_center))
             else:
-                input_provider.line_error = LineString(road.track_points_left1).distance(Point(car.front_center))
+                input_provider.line_error = LineString(road.path_for_drawing).distance(Point(car.front_center))
 
             # User input
             car_input = input_provider.get_input()

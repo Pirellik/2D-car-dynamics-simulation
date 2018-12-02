@@ -84,8 +84,8 @@ class Car:
 
             F_centrifugal = (self.mass*self.velocity.x*self.velocity.x) / abs(turning_radius) #odsrodkowa
             #print(F_od)
-            mi_front_side = 0.09
-            mi_back_side = 0.08
+            mi_front_side = 0.9
+            mi_back_side = 0.8
             F_max_front = mi_front_side * (self.mass / 2) * 9.81
             #print(F_max1)
             F_max_back = mi_back_side * (self.mass / 2) * 9.81
