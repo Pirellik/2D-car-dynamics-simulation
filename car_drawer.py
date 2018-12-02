@@ -19,7 +19,7 @@ class CarDrawer:
         pos_x, pos_y = 1366 / 2, 768 / 2
         angle = -car.angle
         steering = car.steering
-        if len(self.trace) >= 5:
+        if len(self.trace) >= 1500:
             self.trace.pop(0)
         if not self.trace:
             self.trace.append((10 * car.position.x + 1366/2, 10 * car.position.y + 768/2))

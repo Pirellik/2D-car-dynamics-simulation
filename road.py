@@ -136,7 +136,7 @@ class Road:
                     RoadChunk(self.inner_road_for_drawing[index - 1], self.outer_road_for_drawing[index - 1],
                      self.outer_road_for_drawing[index], self.inner_road_for_drawing[index]))
 
-        trace = LineString([(x - self.car.position.x * 10, y - self.car.position.y * 10) for x, y in car_drawer.trace])
+        trace = LineString([(x - self.car.position.x * 10, y - self.car.position.y * 10) for x, y in car_drawer.trace[-5:]])
         for chunk in self.road_chunks:
             if not chunk.is_active:
                 if trace.intersects(chunk.polygon):
