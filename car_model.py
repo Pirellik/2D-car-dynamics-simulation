@@ -64,12 +64,12 @@ class Car:
         self.acceleration = long_force / self.mass
         self.wheel_rpm = self.velocity.length() / self.wheel_radius * 30 / pi
 
-        max_speed_side = 20
+        max_speed_side = 40
 
         self.velocity += Vector2(self.acceleration * dt, 0)
 
         if abs(self.velocity.y) > 0.01:
-            mi1 = 5.9
+            mi1 = 9.9
             F = mi1 * (self.mass / 2) * 9.81
             a = F / self.mass
             #print(self.velocity.y)
@@ -85,7 +85,7 @@ class Car:
             F_centrifugal = (self.mass*self.velocity.x*self.velocity.x) / abs(turning_radius) #odsrodkowa
             #print(F_od)
             mi_front_side = 0.9
-            mi_back_side = 0.8
+            mi_back_side = 0.4
             F_max_front = mi_front_side * (self.mass / 2) * 9.81
             #print(F_max1)
             F_max_back = mi_back_side * (self.mass / 2) * 9.81
@@ -99,17 +99,19 @@ class Car:
                 F_back = F_centrifugal/2 - F_max_back
 
 
-            #print(F_rear, F_back)
             inertia = (1/12)*self.mass*(self.length ** 2 + self.width ** 2)
-            torque = F_back*self.length/2 - F_front*self.length/2
+            torque = F_back*self.length/4 #- F_front*self.length/2
             omega = torque/inertia
-            angular_velocity += omega * dt
+            angular_velocity -= np.sign(self.steering) * omega * dt
+            #print(F_back, F_front, torque, omega)
 
 
             F = min(F_back, F_front)
             a = F/self.mass
-            if abs(self.velocity.y) < max_speed_side:
+            if abs(self.velocity.y + np.sign(self.steering)*a*dt) < max_speed_side:
                 self.velocity.y += np.sign(self.steering)*a*dt
+            else:
+                pass#self.velocity.y = max_speed_side
 
         else:
             angular_velocity = 0
