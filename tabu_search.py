@@ -41,18 +41,18 @@ class Search:
         self.maxb = 6
         self.minb = -1
 
-        self.stop_num_of_iterations = 100 # warunek stopu liczba iteracji
+        self.stop_num_of_iterations = 300 # warunek stopu liczba iteracji
         self.stop_time_change = 100 # warunek stopu - poprawa czasu o _ sek
         self.stop_best_time = -110 # warunek stopu - jesli czasu będzie poniżej wartości
 
         self.first_time = self.simulate(self.solution) #czas dla rozwiązania początkowego
         self.current_time = self.first_time #przechowywany aktualny czas (można zmienić na tablice żeby zapisywać jak sie zmienialy czasy)
 
-        self.num_of_iterations_tabu = 200 #ile iteracji ma zostac na liscie tabu
+        self.num_of_iterations_tabu = 20 #ile iteracji ma zostac na liscie tabu
 
         self.f, self.ax = plt.subplots(1)
 
-        self.ax.set_xlim(0, 160)
+        self.ax.set_xlim(0, self.stop_num_of_iterations)
         self.ax.set_ylim(-100, 0)
         self.ax.set_title("Time")
         self.li, = self.ax.plot([], [])
@@ -108,6 +108,7 @@ class Search:
         for i in range(0, len(self.solution)-1):
 
             #zmieniane po jednej wartosci - mniej przypadkow i zmiana 2 mozna rozbic na 2 zmiany po jednej zmiennej
+            #zmieniac nie tylko o dt - teraz strasznie wolno zmierza
             init_value = self.solution[i]
             x = self.solution[i]
 
@@ -148,7 +149,7 @@ class Search:
         maxVals = [self.maxP, self.maxI, self.maxD, self.maxg, self.maxh, self.maxb]
         minVals = [self.minP, self.minI, self.minD, self.ming, self.minh, self.minb]
 
-        #aktualizacja czasow
+        #aktualizacja czasow - trzeba bo jak sie zmienia rozwiazanie to sie wszystko zmienia
         for j in range(len(self.candidates_list)):
             index = self.candidates_list[j][1]
             x = self.solution[index]
@@ -234,3 +235,4 @@ if __name__ == '__main__':
     solution1 = [PointSolution([1,0,0,0.3,0,0]) for i in range(100)]
     tabu1 = Search(solution1)
     tabu1.search()
+    plt.pause(5)
