@@ -70,7 +70,7 @@ class KeyboardInputProvider(InputProvider):
             throttle = 0
 
         if pygame.key.get_pressed()[pygame.K_DOWN]:
-            brakes = 5000
+            brakes = 1
         else:
             brakes = 0
 
@@ -92,9 +92,18 @@ class KeyboardInputProvider(InputProvider):
 
 
 class AutonomousDriver(InputProvider):
-    def __init__(self):
-        self.pid_controller = PidController(1.2, 0.007, 12)
+    def __init__(self, input_file=None):
+        self.input = input_file
+        self.index = self.input.first_valid_index()
+        self.pid_controller = PidController(0, 0, 0)
         self.line_error = 0
 
     def get_input(self):
-        return .6, 2, 0, self.pid_controller.get_control(self.line_error)
+        self.pid_controller.p_gain = self.input.P[self.index]
+        self.pid_controller.i_gain = self.input.I[self.index]
+        self.pid_controller.d_gain = self.input.D[self.index]
+        throttle = self.input.Throttle[self.index]
+        gear = self.input.Gear[self.index]
+        brakes = self.input.Brakes[self.index]
+
+        return throttle, gear, brakes, self.pid_controller.get_control(self.line_error)

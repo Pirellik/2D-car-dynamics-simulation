@@ -17,7 +17,7 @@ def generate_list_of_factors(size, deviation):
 
 
 class RoadChunk:
-    def __init__(self, point_1, point_2, point_3, point_4):
+    def __init__(self, point_1=(0, 0), point_2=(0, 0), point_3=(0, 0), point_4=(0, 0)):
         self.polygon = Polygon([point_1, point_2, point_3, point_4])
         self.is_active = False
 
@@ -83,12 +83,17 @@ class Road:
         self.inner_road_for_drawing = list(range(len(self.inner_road)))
         self.outer_road_for_drawing = list(range(len(self.outer_road)))
 
-        self.road_chunks = []
-
-
-
-
+        self.road_chunks = [RoadChunk() for _ in range(len(self.inner_road))]
         self.path_deflexions = [0.5 for _ in range(len(self.path))]
+
+    def apply_deformations(self, deformations):
+        if len(deformations) != len(self.path_deflexions):
+            print("Wrong solution vector length.")
+            return
+        self.path_deflexions = deformations
+        for j in range(len(self.path)):
+            self.path[j] = self.path_deflexions[j] * self.outer_road[j] + (1 - self.path_deflexions[j]) * self.inner_road[j]
+            self.path_for_drawing[j] = self.path_deflexions[j] * self.outer_road[j] + (1 - self.path_deflexions[j]) * self.inner_road[j]
 
     def modify_path(self, index, deflexion, number_of_neighbours, deviation):
         if index + number_of_neighbours / 2 > len(self.path) - 1:
