@@ -234,3 +234,4 @@ if __name__ == '__main__':
     solution1 = [PointSolution([1,0,0,0.3,0,0]) for i in range(100)]
     tabu1 = Search(solution1)
     tabu1.search()
+    input()

@@ -93,8 +93,8 @@ class KeyboardInputProvider(InputProvider):
 
 class AutonomousDriver(InputProvider):
     def __init__(self):
-        self.pid_controller = PidController(0.5, 0.007, 3)
+        self.pid_controller = PidController(1.2, 0.007, 12)
         self.line_error = 0
 
     def get_input(self):
-        return 2, 2, 0, self.pid_controller.get_control(self.line_error)
+        return .6, 2, 0, self.pid_controller.get_control(self.line_error)

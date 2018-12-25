@@ -15,7 +15,7 @@ class Game:
         self.window_width = width
         self.window_height = height
         self.screen = pygame.display.set_mode((width, height))
-        self.fps = 100
+        self.fps = 50
 
         self.clock = pygame.time.Clock()
         self.ticks = 60
@@ -51,7 +51,7 @@ class Game:
                                                       'Gear': gear}, ignore_index=True)
             # Drawing
             self.screen.fill((0, 0, 0))
-            road.draw(self.screen)
+            road.draw(self.screen, car_drawer)
             car_drawer.draw(self.screen, car)
             car_data_display.display_data(self.screen)
             pygame.display.flip()
@@ -82,7 +82,7 @@ class Game:
 
             # Drawing
             self.screen.fill((0, 0, 0))
-            road.draw(self.screen)
+            road.draw(self.screen, car_drawer)
             car_drawer.draw(self.screen, car)
             car_data_display.display_data(self.screen)
             pygame.display.flip()
@@ -136,7 +136,6 @@ class Game:
 
         while not self.exit:
             dt = self.clock.tick(self.fps) / 1000
-
             # Event queue
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
