@@ -19,7 +19,7 @@ class CarDrawer:
         pos_x, pos_y = 1366 / 2, 768 / 2
         angle = -car.angle
         steering = car.steering
-        if len(self.trace) >= 1500:
+        if len(self.trace) >= 1000:
             self.trace.pop(0)
         if not self.trace:
             self.trace.append((10 * car.position.x + 1366/2, 10 * car.position.y + 768/2))
@@ -47,7 +47,7 @@ class CarDrawer:
              (pos_x - 4.5 / 10 * self.length + self.length * 3 / 10, pos_y - self.width), (pos_x - 4.5 / 10 * self.length + self.length * 3 / 10, pos_y - self.width * 5 / 6)])
         rear_center = (pos_x, pos_y)
 
-        pygame.draw.lines(screen, (0, 0, 255), False, [(x - car.position.x * 10, y - car.position.y * 10) for x, y in self.trace], 2)
+        #pygame.draw.lines(screen, (0, 0, 255), False, [(x - car.position.x * 10, y - car.position.y * 10) for x, y in self.trace], 2)
         car_model = rotate(self.car_model, angle, rear_center)
         x, y = car_model.exterior.xy
         pygame.draw.polygon(screen, car_color, [(xx, yy) for xx, yy in zip(x, y)], 2)
@@ -55,6 +55,7 @@ class CarDrawer:
         x_axle, y_axle = front_axle.exterior.xy
 
         front_center = ((x_axle[0] + x_axle[1]) / 2, (y_axle[0] + y_axle[1]) / 2)
+        #print(front_center)
         car.front_center = front_center
 
         pygame.draw.polygon(screen, car_color, [(xx, yy) for xx, yy in zip(x_axle, y_axle)], 2)
