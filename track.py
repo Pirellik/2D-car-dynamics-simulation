@@ -164,3 +164,13 @@ class TrackDrawer:
         pygame.draw.polygon(screen, (0, 255, 0), self.path_for_drawing, 2)
         pygame.draw.polygon(screen, (255, 153, 51), self.inner_edge_for_drawing, 10)
         pygame.draw.polygon(screen, (255, 153, 51), self.outer_edge_for_drawing, 10)
+
+class Background(pygame.sprite.Sprite):
+    def __init__(self, image_file, location):
+        pygame.sprite.Sprite.__init__(self)  #call Sprite initializer
+        self.image = pygame.image.load(image_file)
+        self.rect = self.image.get_rect()
+        self.rect.left, self.rect.top = location
+
+    def set_location(self, location):
+        self.rect.left, self.rect.top = location
