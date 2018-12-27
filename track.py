@@ -141,6 +141,7 @@ class TrackDrawer:
         self.path_for_drawing = copy.copy(self.track.path)
         self.inner_edge_for_drawing = copy.copy(self.track.inner_edge)
         self.outer_edge_for_drawing = copy.copy(self.track.outer_edge)
+        self.chunk_indexes = [0]
 
     def draw(self, screen, car_position, trace):
         for ind, point in enumerate(self.track.path):
@@ -150,17 +151,16 @@ class TrackDrawer:
         for ind, point in enumerate(self.track.outer_edge):
             self.outer_edge_for_drawing[ind] = np.array(point) - np.array([car_position.x, car_position.y])
 
-        chunk_indexes = self.track.check_car_position(trace)
+        self.chunk_indexes = self.track.check_car_position(trace)
         chunk_xy = {}
-        for index in chunk_indexes:
+        for index in self.chunk_indexes:
             chunk_xy[index] = self.track.track_chunks[index].polygon.exterior.xy
             chunk_xy[index] = [np.array((x, y)) for x, y in zip(chunk_xy[index][0], chunk_xy[index][1])]
             for ind, point in enumerate(chunk_xy[index]):
                 chunk_xy[index][ind] = point - np.array([car_position.x, car_position.y])
-            pygame.draw.polygon(screen, (20, 70, 20), chunk_xy[index])
-
+            pygame.draw.polygon(screen, (7, 215, 247), chunk_xy[index])
 
         pygame.draw.lines(screen, (0, 0, 255), False, [(x - car_position.x, y - car_position.y) for x, y in trace], 2)
         pygame.draw.polygon(screen, (0, 255, 0), self.path_for_drawing, 2)
-        pygame.draw.polygon(screen, (255, 0, 0), self.inner_edge_for_drawing, 2)
-        pygame.draw.polygon(screen, (255, 0, 0), self.outer_edge_for_drawing, 2)
+        pygame.draw.polygon(screen, (255, 153, 51), self.inner_edge_for_drawing, 10)
+        pygame.draw.polygon(screen, (255, 153, 51), self.outer_edge_for_drawing, 10)
