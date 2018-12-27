@@ -1,13 +1,4 @@
-import pygame
-from pygame.math import Vector2
-from car_drawer import CarDrawer
-from car_model import Car
-from track import *
-import pandas as pd
 from input_providers import *
-from car_data_display import CarDataDisplay
-from shapely.geometry import Point, Polygon, LineString
-from shapely.affinity import rotate
 from tqdm import tqdm
 from tabu_search import Search, PointSolution
 from simulator import Simulator
