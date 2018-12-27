@@ -2,6 +2,7 @@ import numpy as np
 from operator import itemgetter
 import bisect
 import matplotlib.pyplot as plt
+from simulator import Simulator
 
 #TO DO wstawianie do posortowanej listy
 
@@ -18,9 +19,9 @@ class Search:
         self.dP = 0.05
         self.dI = 0.05
         self.dD = 0.05
-        self.dg = 0.1
-        self.dh = 0.1
-        self.db = 1
+        self.dthrottle = 0.1
+        self.dgear = 1
+        self.dbrakes = 0.1
 
         #ograniczenia na parametry
         self.maxP = 5
@@ -32,14 +33,14 @@ class Search:
         self.maxD = 1
         self.minD = 0
 
-        self.maxg = 1
-        self.ming = 0
+        self.maxthrottle = 1
+        self.minthrottle = 0
 
-        self.maxh = 1
-        self.minh = 0
+        self.maxbrakes = 1
+        self.minbrakes = 0
 
-        self.maxb = 6
-        self.minb = -1
+        self.maxgear = 6
+        self.mingear = 0 #wsteczny nie potrzebny
 
         self.stop_num_of_iterations = 300 # warunek stopu liczba iteracji
         self.stop_time_change = 100 # warunek stopu - poprawa czasu o _ sek
@@ -58,6 +59,9 @@ class Search:
         self.li, = self.ax.plot([], [])
 
         self.times = []
+
+        #symulator do pobierania czasów przejazdu
+        self.sim = Simulator('track3.svg')
 
 
 
@@ -102,7 +106,7 @@ class Search:
 
 
     def simulate(self, solution):
-        return -sum([x.g for x in solution])
+        return -sum([x.throttle for x in solution])#self.sim.run(0.05, solution)
 
     def generate_candidates(self):
         for i in range(0, len(self.solution)-1):
@@ -113,9 +117,9 @@ class Search:
             x = self.solution[i]
 
             parameters = x.to_list()
-            changes = [self.dP, self.dI, self.dD, self.dg, self.dh, self.db]
-            maxVals = [self.maxP, self.maxI, self.maxD, self.maxg, self.maxh, self.maxb]
-            minVals = [self.minP, self.minI, self.minD, self.ming, self.minh, self.minb]
+            changes = [self.dP, self.dI, self.dD, self.dthrottle, self.dgear, self.dbrakes]
+            maxVals = [self.maxP, self.maxI, self.maxD, self.maxthrottle, self.maxgear, self.maxbrakes]
+            minVals = [self.minP, self.minI, self.minD, self.minthrottle, self.mingear, self.minbrakes]
 
             for j in range(0, 5):
                 if parameters[j] + changes[j] < maxVals[j]:
@@ -145,9 +149,9 @@ class Search:
         x = self.solution[i]
 
         parameters = x.to_list()
-        changes = [self.dP, self.dI, self.dD, self.dg, self.dh, self.db]
-        maxVals = [self.maxP, self.maxI, self.maxD, self.maxg, self.maxh, self.maxb]
-        minVals = [self.minP, self.minI, self.minD, self.ming, self.minh, self.minb]
+        changes = [self.dP, self.dI, self.dD, self.dthrottle, self.dgear, self.dbrakes]
+        maxVals = [self.maxP, self.maxI, self.maxD, self.maxthrottle, self.maxgear, self.maxbrakes]
+        minVals = [self.minP, self.minI, self.minD, self.minthrottle, self.mingear, self.minbrakes]
 
         #aktualizacja czasow - trzeba bo jak sie zmienia rozwiazanie to sie wszystko zmienia
         for j in range(len(self.candidates_list)):
@@ -205,9 +209,10 @@ class PointSolution:
         self.P = list[0]
         self.I = list[1]
         self.D = list[2]
-        self.g = list[3] #gaz
-        self.h = list[4] #hamulec
-        self.b = list[5] #bieg
+        self.throttle = list[3] #gaz
+        self.gear = list[4] #bieg
+        self.brakes = list[5] #hamulec
+        self.deformation = list[6] #deformacja
 
     def __eq__(self, solution):
         if self.P != solution.P:
@@ -216,11 +221,13 @@ class PointSolution:
             return False
         if self.D != solution.D:
             return False
-        if self.g != solution.g:
+        if self.throttle != solution.throttle:
             return False
-        if self.h != solution.h:
+        if self.gear != solution.gear:
             return False
-        if self.b != solution.b:
+        if self.brakes != solution.brakes:
+            return False
+        if self.deformation != solution.deformation:
             return False
         return True
 
@@ -228,11 +235,11 @@ class PointSolution:
         return str(self.to_list())
 
     def to_list(self):
-        return [self.P, self.I, self.D, self.g, self.h, self.b]
+        return [self.P, self.I, self.D, self.throttle, self.gear, self.brakes, self.deformation]
 
 
 if __name__ == '__main__':
-    solution1 = [PointSolution([1,0,0,0.3,0,0]) for i in range(100)]
+    solution1 = [PointSolution([1,0,0,0.3,0,0,0.5]) for i in range(100)]
     tabu1 = Search(solution1)
     tabu1.search()
     plt.pause(5)
