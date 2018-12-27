@@ -124,7 +124,7 @@ class Search:
             for j in range(0, 5):
                 if parameters[j] + changes[j] < maxVals[j]:
                     parameters[j] += changes[j]
-                self.solution.values[i] = PointSolution(parameters)
+                self.solution.values[i] = (parameters)
                 t = self.simulate(self.solution) # ZAMIENIC NA DOBRA SYMULACJE
                 self.candidates_list.append([PointSolution(parameters), i, t])
 
@@ -132,11 +132,11 @@ class Search:
 
                 if parameters[j] - changes[j] > minVals[j]:
                     parameters[j] -= changes[j]
-                self.solution.values[i] = PointSolution(parameters)
+                self.solution.values[i] = (parameters)
                 t = self.simulate(self.solution)
                 self.candidates_list.append([PointSolution(parameters), i, t])
 
-                parameters = x.to_list()
+                parameters = x
 
             self.solution.values[i] = init_value
 
@@ -148,7 +148,7 @@ class Search:
         init_value = self.solution.values[i]
         x = self.solution.values[i]
 
-        parameters = x.to_list()
+        parameters = x
         changes = [self.dP, self.dI, self.dD, self.dthrottle, self.dgear, self.dbrakes]
         maxVals = [self.maxP, self.maxI, self.maxD, self.maxthrottle, self.maxgear, self.maxbrakes]
         minVals = [self.minP, self.minI, self.minD, self.minthrottle, self.mingear, self.minbrakes]
@@ -157,7 +157,7 @@ class Search:
         for j in range(len(self.candidates_list)):
             index = self.candidates_list[j][1]
             x = self.solution.values[index]
-            self.solution.values[index] = self.candidates_list[j][0]
+            self.solution.values[index] = self.candidates_list[j][0].to_list()
             self.candidates_list[j][2] = self.simulate(self.solution)
             self.solution.values[index] = x
 
@@ -165,19 +165,19 @@ class Search:
         for j in range(0, 5):
             if parameters[j] + changes[j] < maxVals[j]:
                 parameters[j] += changes[j]
-            self.solution.values[i] = PointSolution(parameters)
+            self.solution.values[i] = (parameters)
             t = self.simulate(self.solution)  # ZAMIENIC NA DOBRA SYMULACJE
             self.candidates_list.append([PointSolution(parameters), i, t]) #DODAWANIE DO POSORTOWANEJ LISTY
 
-            parameters = x.to_list()
+            parameters = x
 
             if parameters[j] - changes[j] > minVals[j]:
                 parameters[j] -= changes[j]
-            self.solution.values[i] = PointSolution(parameters)
+            self.solution.values[i] = (parameters)
             t = self.simulate(self.solution)
             self.candidates_list.append([PointSolution(parameters), i, t])
 
-            parameters = x.to_list()
+            parameters = x
 
         self.solution.values[i] = init_value
         self.candidates_list.sort(key=itemgetter(2))
