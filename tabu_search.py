@@ -3,6 +3,7 @@ from operator import itemgetter
 import bisect
 import matplotlib.pyplot as plt
 from simulator import Simulator
+from input_providers import *
 
 #TO DO wstawianie do posortowanej listy
 
@@ -11,9 +12,9 @@ class Search:
         self.solution = init_solution # podajemy rozwiązanie początkowe
 
         self.candidates_list = [] #lista sąsiedztwa z której wybieramy następne rozwiązanie
-        #postać: (rozwiązanie, pozycja_w_rozwiązaniu, czas_przejazdu)
+        #postać: (rozwiązanie PointSolution, pozycja_w_rozwiązaniu, czas_przejazdu)
         self.tabu_list = [] #lista zabronień
-        #postać: (rozwiązanie, pozycja_w_rozwiązaniu, ilość_iteracji)
+        #postać: (rozwiązanie PointSolution, pozycja_w_rozwiązaniu, ilość_iteracji)
 
         #wartosci kroku parametrów
         self.dP = 0.05
@@ -46,6 +47,9 @@ class Search:
         self.stop_time_change = 100 # warunek stopu - poprawa czasu o _ sek
         self.stop_best_time = -110 # warunek stopu - jesli czasu będzie poniżej wartości
 
+        # symulator do pobierania czasów przejazdu
+        self.sim = Simulator('track3.svg')
+
         self.first_time = self.simulate(self.solution) #czas dla rozwiązania początkowego
         self.current_time = self.first_time #przechowywany aktualny czas (można zmienić na tablice żeby zapisywać jak sie zmienialy czasy)
 
@@ -59,11 +63,6 @@ class Search:
         self.li, = self.ax.plot([], [])
 
         self.times = []
-
-        #symulator do pobierania czasów przejazdu
-        self.sim = Simulator('track3.svg')
-
-
 
 
     def search(self):
@@ -96,8 +95,8 @@ class Search:
 
         #print(best_change[0])
         #print([[x[1], x[2]] for x in self.candidates_list])
-        self.add_to_tabu(self.solution[best_change[1]], best_change[1])
-        self.solution[best_change[1]] = best_change[0]
+        self.add_to_tabu(PointSolution(self.solution.values[best_change[1]]), best_change[1])
+        self.solution.values[best_change[1]] = best_change[0].to_list()
         self.current_time = self.simulate(self.solution)
         self.update_candidates(best_change[1])
         self.update_tabu()
@@ -106,17 +105,18 @@ class Search:
 
 
     def simulate(self, solution):
-        return -sum([x.throttle for x in solution])#self.sim.run(0.05, solution)
+        #return -sum([x.throttle for x in solution])
+        return self.sim.run(0.05, solution)
 
     def generate_candidates(self):
-        for i in range(0, len(self.solution)-1):
+        for i in range(0, len(self.solution.values)-1):
 
             #zmieniane po jednej wartosci - mniej przypadkow i zmiana 2 mozna rozbic na 2 zmiany po jednej zmiennej
             #zmieniac nie tylko o dt - teraz strasznie wolno zmierza
-            init_value = self.solution[i]
-            x = self.solution[i]
+            init_value = self.solution.values[i]
+            x = self.solution.values[i]
 
-            parameters = x.to_list()
+            parameters = x
             changes = [self.dP, self.dI, self.dD, self.dthrottle, self.dgear, self.dbrakes]
             maxVals = [self.maxP, self.maxI, self.maxD, self.maxthrottle, self.maxgear, self.maxbrakes]
             minVals = [self.minP, self.minI, self.minD, self.minthrottle, self.mingear, self.minbrakes]
@@ -124,29 +124,29 @@ class Search:
             for j in range(0, 5):
                 if parameters[j] + changes[j] < maxVals[j]:
                     parameters[j] += changes[j]
-                self.solution[i] = PointSolution(parameters)
+                self.solution.values[i] = PointSolution(parameters)
                 t = self.simulate(self.solution) # ZAMIENIC NA DOBRA SYMULACJE
                 self.candidates_list.append([PointSolution(parameters), i, t])
 
-                parameters = x.to_list()
+                parameters = x
 
                 if parameters[j] - changes[j] > minVals[j]:
                     parameters[j] -= changes[j]
-                self.solution[i] = PointSolution(parameters)
+                self.solution.values[i] = PointSolution(parameters)
                 t = self.simulate(self.solution)
                 self.candidates_list.append([PointSolution(parameters), i, t])
 
                 parameters = x.to_list()
 
-            self.solution[i] = init_value
+            self.solution.values[i] = init_value
 
         self.candidates_list.sort(key=itemgetter(2))
 
 
 
     def update_candidates(self, i): #i - gdzie zmiana wystapila
-        init_value = self.solution[i]
-        x = self.solution[i]
+        init_value = self.solution.values[i]
+        x = self.solution.values[i]
 
         parameters = x.to_list()
         changes = [self.dP, self.dI, self.dD, self.dthrottle, self.dgear, self.dbrakes]
@@ -156,16 +156,16 @@ class Search:
         #aktualizacja czasow - trzeba bo jak sie zmienia rozwiazanie to sie wszystko zmienia
         for j in range(len(self.candidates_list)):
             index = self.candidates_list[j][1]
-            x = self.solution[index]
-            self.solution[index] = self.candidates_list[j][0]
+            x = self.solution.values[index]
+            self.solution.values[index] = self.candidates_list[j][0]
             self.candidates_list[j][2] = self.simulate(self.solution)
-            self.solution[index] = x
+            self.solution.values[index] = x
 
 
         for j in range(0, 5):
             if parameters[j] + changes[j] < maxVals[j]:
                 parameters[j] += changes[j]
-            self.solution[i] = PointSolution(parameters)
+            self.solution.values[i] = PointSolution(parameters)
             t = self.simulate(self.solution)  # ZAMIENIC NA DOBRA SYMULACJE
             self.candidates_list.append([PointSolution(parameters), i, t]) #DODAWANIE DO POSORTOWANEJ LISTY
 
@@ -173,13 +173,13 @@ class Search:
 
             if parameters[j] - changes[j] > minVals[j]:
                 parameters[j] -= changes[j]
-            self.solution[i] = PointSolution(parameters)
+            self.solution.values[i] = PointSolution(parameters)
             t = self.simulate(self.solution)
             self.candidates_list.append([PointSolution(parameters), i, t])
 
             parameters = x.to_list()
 
-        self.solution[i] = init_value
+        self.solution.values[i] = init_value
         self.candidates_list.sort(key=itemgetter(2))
 
     def update_tabu(self):
@@ -239,7 +239,10 @@ class PointSolution:
 
 
 if __name__ == '__main__':
-    solution1 = [PointSolution([1,0,0,0.3,0,0,0.5]) for i in range(100)]
+    #solution1 = [PointSolution([1,0,0,0.3,0,0,0.5]) for i in range(100)]
+    solution1 = pd.read_csv('solution.csv', index_col=0)
+    sol = solution1.values
+    print(sol[0])
     tabu1 = Search(solution1)
     tabu1.search()
     plt.pause(5)
