@@ -59,7 +59,7 @@ class Game:
 
     def run_pid_controller(self, solution_path='solution.csv'):
         car = Car(self.window_width / 20, self.window_height / 20)
-        track = Track('track3.svg')
+        track = Track('track6.svg')
         track_drawer = TrackDrawer(track)
         solution = pd.read_csv(solution_path, index_col=0)
         track.apply_deformations(list(solution.Deformation))

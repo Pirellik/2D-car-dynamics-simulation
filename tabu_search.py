@@ -4,6 +4,7 @@ import bisect
 import matplotlib.pyplot as plt
 from simulator import Simulator
 from input_providers import *
+from tqdm import tqdm
 
 #TO DO wstawianie do posortowanej listy
 
@@ -34,7 +35,7 @@ class Search:
         self.maxD = 1
         self.minD = 0
 
-        self.maxthrottle = 1
+        self.maxthrottle = 2
         self.minthrottle = 0
 
         self.maxbrakes = 1
@@ -48,7 +49,7 @@ class Search:
         self.stop_best_time = -110 # warunek stopu - jesli czasu będzie poniżej wartości
 
         # symulator do pobierania czasów przejazdu
-        self.sim = Simulator('track3.svg')
+        self.sim = Simulator('track6.svg')
 
         self.first_time = self.simulate(self.solution) #czas dla rozwiązania początkowego
         self.current_time = self.first_time #przechowywany aktualny czas (można zmienić na tablice żeby zapisywać jak sie zmienialy czasy)
@@ -58,7 +59,7 @@ class Search:
         self.f, self.ax = plt.subplots(1)
 
         self.ax.set_xlim(0, self.stop_num_of_iterations)
-        self.ax.set_ylim(-100, 0)
+        self.ax.set_ylim(6.4, 6.8)
         self.ax.set_title("Time")
         self.li, = self.ax.plot([], [])
 
@@ -109,7 +110,7 @@ class Search:
         return self.sim.run(0.05, solution)
 
     def generate_candidates(self):
-        for i in range(0, len(self.solution.values)-1):
+        for i in tqdm(range(0, len(self.solution.values)-1)):
 
             #zmieniane po jednej wartosci - mniej przypadkow i zmiana 2 mozna rozbic na 2 zmiany po jednej zmiennej
             #zmieniac nie tylko o dt - teraz strasznie wolno zmierza
@@ -124,7 +125,9 @@ class Search:
             for j in range(0, 5):
                 if parameters[j] + changes[j] < maxVals[j]:
                     parameters[j] += changes[j]
-                self.solution.values[i] = (parameters)
+                print(self.solution.values[i], 1, parameters)
+                self.solution.values[i] = parameters
+                print(self.solution.values[i], 2)
                 t = self.simulate(self.solution) # ZAMIENIC NA DOBRA SYMULACJE
                 self.candidates_list.append([PointSolution(parameters), i, t])
 
@@ -240,7 +243,7 @@ class PointSolution:
 
 if __name__ == '__main__':
     #solution1 = [PointSolution([1,0,0,0.3,0,0,0.5]) for i in range(100)]
-    solution1 = pd.read_csv('solution.csv', index_col=0)
+    solution1 = pd.read_csv('solution3.csv', index_col=0)
     sol = solution1.values
     print(sol[0])
     tabu1 = Search(solution1)
