@@ -86,7 +86,7 @@ class Track:
 
     def apply_deformations(self, deformations):
         if len(deformations) != len(self.path_deformations):
-            print("Wrong solution vector length.")
+            print("Wrong solution vector length.", len(deformations), " ", len(self.path_deformations))
             return
         self.path_deformations = deformations
         for j in range(len(self.path)):
