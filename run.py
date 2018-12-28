@@ -9,9 +9,9 @@ if __name__ == '__main__':
     game = Game(1366, 768)
     game.run_pid_controller()
     #game.run()
-    sim = Simulator('track5.svg')
+    sim = Simulator('track6.svg')
     solution = pd.read_csv('solution3.csv', index_col=0)
-    solution2 = pd.read_csv('solution3.csv', index_col=0)
+    solution2 = pd.read_csv('solutionOpt.csv', index_col=0)
     times = []
     for ind in tqdm(range(5)):
         if ind < 2:

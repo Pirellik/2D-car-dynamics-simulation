@@ -57,7 +57,7 @@ class Game:
             pygame.display.flip()
         pygame.quit()
 
-    def run_pid_controller(self, solution_path='solution.csv'):
+    def run_pid_controller(self, solution_path='solutionOpt.csv'):
         car = Car(self.window_width / 20, self.window_height / 20)
         track = Track('track6.svg')
         track_drawer = TrackDrawer(track)
