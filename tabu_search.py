@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from simulator import Simulator
 from input_providers import *
 from tqdm import tqdm
+from math import floor, e
 
 #TO DO wstawianie do posortowanej listy
 
@@ -49,7 +50,7 @@ class Search:
         self.stop_best_time = -110 # warunek stopu - jesli czasu będzie poniżej wartości
 
         # symulator do pobierania czasów przejazdu
-        self.sim = Simulator('track6.svg')
+        self.sim = Simulator('track3.svg')
 
         self.first_time = self.simulate(self.solution) #czas dla rozwiązania początkowego
         self.current_time = self.first_time #przechowywany aktualny czas (można zmienić na tablice żeby zapisywać jak sie zmienialy czasy)
@@ -242,9 +243,19 @@ class PointSolution:
         return [self.P, self.I, self.D, self.throttle, self.gear, self.brakes, self.deformation]
 
 
+def generate_list_of_factors(size):
+    deviation = (size - 1) / 4
+    list_of_factors = []
+    for index in range(size):
+        list_of_factors.append(e**(- (index - floor(size / 2)) ** 2 / (2 * deviation ** 2)))
+    return list_of_factors
+
+
 if __name__ == '__main__':
+    plt.plot(list(range(21)), generate_list_of_factors(21))
+    plt.show()
     #solution1 = [PointSolution([1,0,0,0.3,0,0,0.5]) for i in range(100)]
-    solution1 = pd.read_csv('solution3.csv', index_col=0)
+    solution1 = pd.read_csv('solution.csv', index_col=0)
     tabu1 = Search(solution1)
     tabu1.search()
     plt.pause(5)
