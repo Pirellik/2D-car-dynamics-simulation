@@ -32,7 +32,7 @@ class Search:
         self.maxI = 1
         self.minI = 0
 
-        self.maxD = 1
+        self.maxD = 20
         self.minD = 0
 
         self.maxthrottle = 2
@@ -129,7 +129,7 @@ class Search:
                 if parameters[j] + changes[j] < maxVals[j]:
                     parameters[j] += changes[j]
                 self.solution.iloc[i] = parameters.copy()
-                t = self.simulate(self.solution) # ZAMIENIC NA DOBRA SYMULACJE
+                t = self.simulate(self.solution)
                 self.candidates_list.append([PointSolution(parameters), i, t])
 
                 parameters = x.copy()
