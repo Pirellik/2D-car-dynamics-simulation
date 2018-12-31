@@ -10,7 +10,7 @@ from math import floor, e
 #TO DO wstawianie do posortowanej listy
 
 class Search:
-    def __init__(self, init_solution):
+    def __init__(self, init_solution, track):
         self.solution = init_solution # podajemy rozwiązanie początkowe
 
         self.candidates_list = [] #lista sąsiedztwa z której wybieramy następne rozwiązanie
@@ -50,21 +50,42 @@ class Search:
         self.stop_best_time = -110 # warunek stopu - jesli czasu będzie poniżej wartości
 
         # symulator do pobierania czasów przejazdu
-        self.sim = Simulator('track3.svg')
+        self.sim = Simulator(track)
 
         self.first_time = self.simulate(self.solution) #czas dla rozwiązania początkowego
         self.current_time = self.first_time #przechowywany aktualny czas (można zmienić na tablice żeby zapisywać jak sie zmienialy czasy)
 
         self.num_of_iterations_tabu = 10 #ile iteracji ma zostac na liscie tabu
 
-        self.f, self.ax = plt.subplots(1)
+        self.f0, self.ax0 = plt.subplots(1)
+        self.f1, self.ax1 = plt.subplots(1)
+        self.f2, self.ax2 = plt.subplots(1)
+        self.f3, self.ax3 = plt.subplots(1)
 
-        self.ax.set_xlim(0, self.stop_num_of_iterations)
-        self.ax.set_ylim(0, 10)
-        self.ax.set_title("Time")
-        self.li, = self.ax.plot([], [])
+        self.ax0.set_xlim(0, self.stop_num_of_iterations)
+        self.ax0.set_ylim(0, 10)
+        self.ax0.set_title("Current Time")
+        self.liTime, = self.ax0.plot([], [])
 
-        self.times = []
+        self.ax1.set_xlim(0, self.stop_num_of_iterations)
+        self.ax1.set_ylim(0, 10)
+        self.ax1.set_title("Candidates Times")
+        self.liCandiTime, = self.ax1.plot([], [])
+
+        self.ax2.set_xlim(0, self.stop_num_of_iterations)
+        self.ax2.set_ylim(0, 100)
+        self.ax2.set_title("Tabu size")
+        self.liTabuSize, = self.ax2.plot([], [])
+
+        self.ax3.set_xlim(0, self.stop_num_of_iterations)
+        self.ax3.set_ylim(0, 10)
+        self.ax3.set_title("Tabu usage")
+        self.liTabuUsage, = self.ax3.plot([], [])
+
+        self.plot_times = []
+        self.plot_tabu_used = []
+        self.plot_tabu_size = []
+        self.plot_candidates_times = []
 
 
     def search(self):
@@ -79,14 +100,28 @@ class Search:
             time_change = self.first_time - self.current_time
             iterations += 1
             #print(self.current_time)
-            self.times.append(self.current_time)
-            self.li.set_xdata(np.arange(iterations))
-            self.li.set_ydata(self.times)
+            self.plot_times.append(self.current_time)
+            self.plot_tabu_size.append(len(self.tabu_list))
+            self.plot_candidates_times.append([self.candidates_list[0][2], self.candidates_list[len(self.candidates_list)-1][2], np.mean([x[2] for x in self.candidates_list])])
+
+            self.liTime.set_xdata(np.arange(iterations))
+            #self.liCandiTime.set_xdata(np.arange(iterations))
+            self.liTabuSize.set_xdata(np.arange(iterations))
+            self.liTabuUsage.set_xdata(np.arange(iterations))
+
+            self.liTime.set_ydata(self.plot_times)
+            #self.liTime.set_ydata(self.plot_candidates_times)
+            self.liTabuSize.set_ydata(self.plot_tabu_size)
+            self.liTabuUsage.set_ydata(self.plot_tabu_used)
+
             print(self.current_time)
             plt.pause(0.01)
             #print([x.g for x in self.solution])
             #print([x[0] for x in self.tabu_list])
         self.solution.to_csv("solutionOpt.csv")
+        self.ax1.plot(np.arange(iterations), [x[0] for x in self.candidates_list])
+        self.ax1.plot(np.arange(iterations), [x[1] for x in self.candidates_list])
+        self.ax1.plot(np.arange(iterations), [x[2] for x in self.candidates_list])
         plt.pause(6000)
 
     def iterate(self):
@@ -97,7 +132,7 @@ class Search:
             best_change = self.candidates_list[i]
             on_tabu_list = self.check_tabu_list(best_change[0], best_change[1])
             i += 1
-
+        self.plot_tabu_used.append(i-1)
         #print(best_change[0])
         #print([[x[1], x[2]] for x in self.candidates_list])
         self.add_to_tabu(PointSolution(self.solution.values[best_change[1]].copy()), best_change[1])
@@ -252,10 +287,10 @@ def generate_list_of_factors(size):
 
 
 if __name__ == '__main__':
-    plt.plot(list(range(21)), generate_list_of_factors(21))
-    plt.show()
+    #plt.plot(list(range(21)), generate_list_of_factors(21))
+    #plt.show()
     #solution1 = [PointSolution([1,0,0,0.3,0,0,0.5]) for i in range(100)]
-    solution1 = pd.read_csv('solution.csv', index_col=0)
-    tabu1 = Search(solution1)
+    solution1 = pd.read_csv('solution3.csv', index_col=0)
+    tabu1 = Search(solution1, 'track6.svg')
     tabu1.search()
-    plt.pause(5)
+    #plt.pause(5)
