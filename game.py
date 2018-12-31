@@ -13,7 +13,7 @@ class Game:
         self.window_width = width
         self.window_height = height
         self.screen = pygame.display.set_mode((width, height))
-        self.fps = 100
+        self.fps = 20
         self.background = Background('BlueCheckerPatternPaper.png', [0, 0])
 
         self.clock = pygame.time.Clock()
