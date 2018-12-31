@@ -57,7 +57,7 @@ class Game:
             pygame.display.flip()
         pygame.quit()
 
-    def run_pid_controller(self, solution_path='solutionOpt.csv'):
+    def run_pid_controller(self, solution_path='solutionOpt.csv', dt=0.05):
         car = Car(self.window_width / 20, self.window_height / 20)
         track = Track('track6.svg')
         track_drawer = TrackDrawer(track)
@@ -71,7 +71,7 @@ class Game:
         trace = [(car.position.x * 10 + 1366/2, car.position.y * 10 + 768/2) for _ in range(3)]
         while not self.exit:
             # Handling time
-            dt = self.clock.tick(self.fps) / 1000
+            self.clock.tick(1 / dt)
             time += dt
 
             # Event queue
