@@ -15,6 +15,7 @@ class Search:
 
         self.candidates_list = [] #lista sąsiedztwa z której wybieramy następne rozwiązanie
         #postać: (rozwiązanie PointSolution, pozycja_w_rozwiązaniu, czas_przejazdu)
+        # postać gauss: (rozwiązanie PointSolution, pozycja_w_rozwiązaniu, czas_przejazdu, ktory element zostal zmieniony)
         self.tabu_list = [] #lista zabronień
         #postać: (rozwiązanie PointSolution, pozycja_w_rozwiązaniu, ilość_iteracji)
 
@@ -45,7 +46,7 @@ class Search:
         self.maxgear = 6
         self.mingear = 0 #wsteczny nie potrzebny
 
-        self.stop_num_of_iterations = 30 # warunek stopu liczba iteracji
+        self.stop_num_of_iterations = 5 # warunek stopu liczba iteracji
         self.stop_time_change = 100 # warunek stopu - poprawa czasu o _ sek
         self.stop_best_time = -110 # warunek stopu - jesli czasu będzie poniżej wartości
 
@@ -87,10 +88,21 @@ class Search:
         self.plot_tabu_size = []
         self.plot_candidates_times = []
 
+        self.use_gaussian = True
+        self.solutionSize = len(self.solution.values)
+
+        self.changes = [self.dP, self.dI, self.dD, self.dthrottle, self.dgear, self.dbrakes]
+        self.maxVals = [self.maxP, self.maxI, self.maxD, self.maxthrottle, self.maxgear, self.maxbrakes]
+        self.minVals = [self.minP, self.minI, self.minD, self.minthrottle, self.mingear, self.minbrakes]
+
 
     def search(self):
         # najpierw generujemy początkową listę sąsiedztwa
-        self.generate_candidates()
+        if(self.use_gaussian):
+            self.generate_candidates_gaussian()
+        else:
+            self.generate_candidates()
+
         print([[x[1], x[2]] for x in self.candidates_list])
         # póżniej tylko aktualizujemy
         iterations = 0
@@ -136,9 +148,16 @@ class Search:
         #print(best_change[0])
         #print([[x[1], x[2]] for x in self.candidates_list])
         self.add_to_tabu(PointSolution(self.solution.values[best_change[1]].copy()), best_change[1])
-        self.solution.iloc[best_change[1]] = best_change[0].to_list()
-        self.current_time = self.simulate(self.solution)
-        self.update_candidates(best_change[1])
+
+
+        if(self.use_gaussian):
+            self.modify_gaussian(best_change[0].to_list(), best_change[1], best_change[3])
+            self.update_candidates_gaussian(best_change[1])
+        else:
+            self.solution.iloc[best_change[1]] = best_change[0].to_list()
+            self.update_candidates(best_change[1])
+        #self.current_time = self.simulate(self.solution)
+        self.current_time = best_change[2]
         self.update_tabu()
 
 
@@ -222,6 +241,65 @@ class Search:
         self.solution.iloc[i] = init_value.copy()
         self.candidates_list.sort(key=itemgetter(2))
 
+    def generate_candidates_gaussian(self):
+        for i in tqdm(range(0, len(self.solution.values)-1)):
+
+            #zmieniane po jednej wartosci - mniej przypadkow i zmiana 2 mozna rozbic na 2 zmiany po jednej zmiennej
+            #zmieniac nie tylko o dt - teraz strasznie wolno zmierza
+
+
+            parameters = [0, 0, 0, 0, 0, 0, 0]
+
+            for j in range(0, 5):
+                parameters[j] = self.changes[j]
+                self.modify_gaussian(parameters, i, j)
+                t = self.simulate(self.solution)
+                self.candidates_list.append([PointSolution(parameters), i, t, j])
+                self.modify_gaussian((-1)*parameters, i, j)
+
+                parameters[j] = -self.changes[j]
+                self.modify_gaussian(parameters, i, j)
+                t = self.simulate(self.solution)
+                self.candidates_list.append([PointSolution(parameters), i, t, j])
+                self.modify_gaussian((-1)*parameters, i, j)
+
+                parameters = [0, 0, 0, 0, 0, 0, 0]
+
+        self.candidates_list.sort(key=itemgetter(2))
+
+
+
+    def update_candidates_gaussian(self, i): #i - gdzie zmiana wystapila
+
+        #aktualizacja czasow - trzeba bo jak sie zmienia rozwiazanie to sie wszystko zmienia
+        for j in tqdm(range(len(self.candidates_list))):
+            index = self.candidates_list[j][1]
+            self.modify_gaussian(self.candidates_list[j][0].to_list(), index, self.candidates_list[j][3])
+            self.candidates_list[j][2] = self.simulate(self.solution)
+            self.modify_gaussian((-1)*self.candidates_list[j][0].to_list(), index, self.candidates_list[j][3])
+
+        self.candidates_list.sort(key=itemgetter(2))
+
+    def modify_gaussian(self, parameters, position, changePosition):
+        factors = generate_list_of_factors(7)
+        if len(parameters) == 0:
+            return
+        for i in range(-3, 3):
+            newPosition = i + position
+            if newPosition < 0 or newPosition >= self.solutionSize:
+                continue
+            newParameters = parameters.copy()
+            #print(newParameters)
+            if(changePosition != 4):
+                newParameters[changePosition] *= factors[i+3]
+            solutionSum = self.solution.iloc[newPosition][changePosition] + newParameters[changePosition]
+            if solutionSum > self.maxVals[changePosition]:
+                self.solution.iloc[newPosition, changePosition] = self.maxVals[changePosition]
+            elif solutionSum < self.minVals[changePosition]:
+                self.solution.iloc[newPosition, changePosition] = self.minVals[changePosition]
+            else:
+                self.solution.iloc[newPosition, changePosition] = solutionSum
+
     def update_tabu(self):
         for i in range(0, len(self.tabu_list)-2): #dla -1 czasem przekracza
             #print(i, len(self.tabu_list)-1)
@@ -243,6 +321,9 @@ class Search:
                     #print(x[0], value)
                     return True
         return False
+
+
+
 
 class PointSolution:
     def __init__(self, list):
