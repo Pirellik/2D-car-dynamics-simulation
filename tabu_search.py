@@ -86,9 +86,11 @@ class Search:
         self.plot_times = []
         self.plot_tabu_used = []
         self.plot_tabu_size = []
-        self.plot_candidates_times = []
+        self.plot_candidates_times_min = []
+        self.plot_candidates_times_max = []
+        self.plot_candidates_times_mean = []
 
-        self.use_gaussian = True
+        self.use_gaussian = False
         self.solutionSize = len(self.solution.values)
 
         self.changes = [self.dP, self.dI, self.dD, self.dthrottle, self.dgear, self.dbrakes]
@@ -114,7 +116,10 @@ class Search:
             #print(self.current_time)
             self.plot_times.append(self.current_time)
             self.plot_tabu_size.append(len(self.tabu_list))
-            self.plot_candidates_times.append([self.candidates_list[0][2], self.candidates_list[len(self.candidates_list)-1][2], np.mean([x[2] for x in self.candidates_list])])
+            self.plot_candidates_times_min.append(self.candidates_list[0][2])
+            self.plot_candidates_times_max.append(self.candidates_list[len(self.candidates_list) - 1][2])
+            self.plot_candidates_times_mean.append(np.mean([x[2] for x in self.candidates_list]))
+
 
             self.liTime.set_xdata(np.arange(iterations))
             #self.liCandiTime.set_xdata(np.arange(iterations))
@@ -131,9 +136,9 @@ class Search:
             #print([x.g for x in self.solution])
             #print([x[0] for x in self.tabu_list])
         self.solution.to_csv("solutionOpt.csv")
-        self.ax1.plot(np.arange(iterations), [x[0] for x in self.candidates_list])
-        self.ax1.plot(np.arange(iterations), [x[1] for x in self.candidates_list])
-        self.ax1.plot(np.arange(iterations), [x[2] for x in self.candidates_list])
+        self.ax1.plot(np.arange(iterations), self.plot_candidates_times_min)
+        self.ax1.plot(np.arange(iterations), self.plot_candidates_times_max)
+        self.ax1.plot(np.arange(iterations), self.plot_candidates_times_mean)
         plt.pause(6000)
 
     def iterate(self):
