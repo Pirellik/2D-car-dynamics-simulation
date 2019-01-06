@@ -97,6 +97,8 @@ class Search:
         self.maxVals = [self.maxP, self.maxI, self.maxD, self.maxthrottle, self.maxgear, self.maxbrakes]
         self.minVals = [self.minP, self.minI, self.minD, self.minthrottle, self.mingear, self.minbrakes]
 
+        self.aspiration_time = 0.1
+
 
     def search(self):
         # najpierw generujemy początkową listę sąsiedztwa
@@ -148,6 +150,10 @@ class Search:
         while on_tabu_list:
             best_change = self.candidates_list[i]
             on_tabu_list = self.check_tabu_list(best_change[0], best_change[1])
+            #kryterium aspiracji
+            if self.current_time - best_change[2] > self.aspiration_time:
+                on_tabu_list = False
+                print("Uzyte kryterium aspiracji. Poprawa czasu: ", self.current_time - best_change[2])
             i += 1
         self.plot_tabu_used.append(i-1)
         #print(best_change[0])
@@ -319,7 +325,6 @@ class Search:
 
     def check_tabu_list(self, value, position):
         #TO DO dodać kryterium aspiracji - wziąć pod uwagę jak poprawia i można też ile iteracji już jest na liście
-        #poprawic porownywanie
         for x in self.tabu_list:
             if x[1] == position:
                 if x[0] == value:
