@@ -53,6 +53,7 @@ class Search:
 
         self.first_time = self.simulate(self.solution) #czas dla rozwiązania początkowego
         self.current_time = self.first_time #przechowywany aktualny czas (można zmienić na tablice żeby zapisywać jak sie zmienialy czasy)
+        self.best_time = self.first_time
 
         self.num_of_iterations_tabu = 10 #ile iteracji ma zostac na liscie tabu
 
@@ -112,6 +113,10 @@ class Search:
             self.iterate()
             time_change = self.first_time - self.current_time
             iterations += 1
+            if self.current_time < self.best_time:
+                self.best_time = self.current_time
+                self.solution.to_csv("solutionOpt.csv")
+
             self.plot_times.append(self.current_time)
             self.plot_tabu_size.append(len(self.tabu_list))
             self.plot_candidates_times_min.append(self.candidates_list[0][2])
@@ -129,7 +134,7 @@ class Search:
 
             print(self.current_time)
             plt.pause(0.01)
-        self.solution.to_csv("solutionOpt.csv")
+
         self.ax1.plot(np.arange(iterations), self.plot_candidates_times_min)
         self.ax1.plot(np.arange(iterations), self.plot_candidates_times_max)
         self.ax1.plot(np.arange(iterations), self.plot_candidates_times_mean)
