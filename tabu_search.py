@@ -7,8 +7,6 @@ from input_providers import *
 from tqdm import tqdm
 from math import floor, e
 
-#TO DO wstawianie do posortowanej listy
-
 class Search:
     def __init__(self, init_solution, track):
         self.solution = init_solution # podajemy rozwiązanie początkowe
@@ -107,7 +105,6 @@ class Search:
         else:
             self.generate_candidates()
 
-        print([[x[1], x[2]] for x in self.candidates_list])
         # póżniej tylko aktualizujemy
         iterations = 0
         time_change = 0
@@ -115,7 +112,6 @@ class Search:
             self.iterate()
             time_change = self.first_time - self.current_time
             iterations += 1
-            #print(self.current_time)
             self.plot_times.append(self.current_time)
             self.plot_tabu_size.append(len(self.tabu_list))
             self.plot_candidates_times_min.append(self.candidates_list[0][2])
@@ -124,19 +120,15 @@ class Search:
 
 
             self.liTime.set_xdata(np.arange(iterations))
-            #self.liCandiTime.set_xdata(np.arange(iterations))
             self.liTabuSize.set_xdata(np.arange(iterations))
             self.liTabuUsage.set_xdata(np.arange(iterations))
 
             self.liTime.set_ydata(self.plot_times)
-            #self.liTime.set_ydata(self.plot_candidates_times)
             self.liTabuSize.set_ydata(self.plot_tabu_size)
             self.liTabuUsage.set_ydata(self.plot_tabu_used)
 
             print(self.current_time)
             plt.pause(0.01)
-            #print([x.g for x in self.solution])
-            #print([x[0] for x in self.tabu_list])
         self.solution.to_csv("solutionOpt.csv")
         self.ax1.plot(np.arange(iterations), self.plot_candidates_times_min)
         self.ax1.plot(np.arange(iterations), self.plot_candidates_times_max)
@@ -144,9 +136,9 @@ class Search:
         plt.pause(6000)
 
     def iterate(self):
-        print([[x[1], x[2]] for x in self.candidates_list])
         on_tabu_list = True
         i = 0
+
         while on_tabu_list:
             best_change = self.candidates_list[i]
             on_tabu_list = self.check_tabu_list(best_change[0], best_change[1])
@@ -155,9 +147,8 @@ class Search:
                 on_tabu_list = False
                 print("Uzyte kryterium aspiracji. Poprawa czasu: ", self.current_time - best_change[2])
             i += 1
+
         self.plot_tabu_used.append(i-1)
-        #print(best_change[0])
-        #print([[x[1], x[2]] for x in self.candidates_list])
         self.add_to_tabu(PointSolution(self.solution.values[best_change[1]].copy()), best_change[1])
 
 
@@ -175,7 +166,6 @@ class Search:
 
 
     def simulate(self, solution):
-        #return -sum([x.throttle for x in solution])
         return self.sim.run(0.05, solution)
 
     def generate_candidates(self):
@@ -248,7 +238,6 @@ class Search:
             self.candidates_list.append([PointSolution(parameters), i, t])
 
             parameters = x.copy()
-        print(self.solution.iloc[i], init_value)
         self.solution.iloc[i] = init_value.copy()
         self.candidates_list.sort(key=itemgetter(2))
 
@@ -257,8 +246,6 @@ class Search:
 
             #zmieniane po jednej wartosci - mniej przypadkow i zmiana 2 mozna rozbic na 2 zmiany po jednej zmiennej
             #zmieniac nie tylko o dt - teraz strasznie wolno zmierza
-
-
             parameters = [0, 0, 0, 0, 0, 0, 0]
 
             for j in range(0, 5):
@@ -300,7 +287,6 @@ class Search:
             if newPosition < 0 or newPosition >= self.solutionSize:
                 continue
             newParameters = parameters.copy()
-            #print(newParameters)
             if(changePosition != 4):
                 newParameters[changePosition] *= factors[i+3]
             solutionSum = self.solution.iloc[newPosition][changePosition] + newParameters[changePosition]
@@ -312,8 +298,7 @@ class Search:
                 self.solution.iloc[newPosition, changePosition] = solutionSum
 
     def update_tabu(self):
-        for i in range(0, len(self.tabu_list)-2): #dla -1 czasem przekracza
-            #print(i, len(self.tabu_list)-1)
+        for i in range(0, len(self.tabu_list)-2): #dla -1 czasem przekracza - jedno rozwiązanie puste jest
             self.tabu_list[i][2] += 1
             if self.tabu_list[i][2] > self.num_of_iterations_tabu:
                 del(self.tabu_list[i])
@@ -324,11 +309,9 @@ class Search:
         self.tabu_list.append([value, position, 1])
 
     def check_tabu_list(self, value, position):
-        #TO DO dodać kryterium aspiracji - wziąć pod uwagę jak poprawia i można też ile iteracji już jest na liście
         for x in self.tabu_list:
             if x[1] == position:
                 if x[0] == value:
-                    #print(x[0], value)
                     return True
         return False
 
