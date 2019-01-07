@@ -18,35 +18,35 @@ class Search:
         #postać: (rozwiązanie PointSolution, pozycja_w_rozwiązaniu, ilość_iteracji)
 
         #wartosci kroku parametrów
-        self.dP = 0.05
-        self.dI = 0.05
-        self.dD = 0.05
-        self.dthrottle = 0.1
+        self.dP = 0.5
+        self.dI = 0.5
+        self.dD = 1
+        self.dthrottle = 0.5
         self.dgear = 1
-        self.dbrakes = 0.1
+        self.dbrakes = 0.5
 
         #ograniczenia na parametry
         self.maxP = 5
         self.minP = 0
 
-        self.maxI = 1
+        self.maxI = 5
         self.minI = 0
 
         self.maxD = 20
         self.minD = 0
 
-        self.maxthrottle = 2
+        self.maxthrottle = 2.1
         self.minthrottle = 0
 
-        self.maxbrakes = 1
+        self.maxbrakes = 1.1
         self.minbrakes = 0
 
         self.maxgear = 6
         self.mingear = 0 #wsteczny nie potrzebny
 
-        self.stop_num_of_iterations = 5 # warunek stopu liczba iteracji
-        self.stop_time_change = 100 # warunek stopu - poprawa czasu o _ sek
-        self.stop_best_time = -110 # warunek stopu - jesli czasu będzie poniżej wartości
+        self.stop_num_of_iterations = 30 # warunek stopu liczba iteracji
+        self.stop_time_change = 3 # warunek stopu - poprawa czasu o _ sek
+        self.stop_best_time = -5 # warunek stopu - jesli czasu będzie poniżej wartości
 
         # symulator do pobierania czasów przejazdu
         self.sim = Simulator(track)
@@ -55,7 +55,7 @@ class Search:
         self.current_time = self.first_time #przechowywany aktualny czas (można zmienić na tablice żeby zapisywać jak sie zmienialy czasy)
         self.best_time = self.first_time
 
-        self.num_of_iterations_tabu = 10 #ile iteracji ma zostac na liscie tabu
+        self.num_of_iterations_tabu = 15 #ile iteracji ma zostac na liscie tabu
 
         self.f0, self.ax0 = plt.subplots(1)
         self.f1, self.ax1 = plt.subplots(1)
@@ -96,7 +96,7 @@ class Search:
         self.maxVals = [self.maxP, self.maxI, self.maxD, self.maxthrottle, self.maxgear, self.maxbrakes]
         self.minVals = [self.minP, self.minI, self.minD, self.minthrottle, self.mingear, self.minbrakes]
 
-        self.aspiration_time = 0.1
+        self.aspiration_time = 0.2
 
 
     def search(self):
@@ -133,6 +133,7 @@ class Search:
             self.liTabuUsage.set_ydata(self.plot_tabu_used)
 
             print(self.current_time)
+            print([x[2] for x in self.candidates_list])
             plt.pause(0.01)
 
         self.ax1.plot(np.arange(iterations), self.plot_candidates_times_min)
