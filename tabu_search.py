@@ -18,12 +18,12 @@ class Search:
         #postać: (rozwiązanie PointSolution, pozycja_w_rozwiązaniu, ilość_iteracji)
 
         #wartosci kroku parametrów
-        self.dP = 0.5
-        self.dI = 0.5
-        self.dD = 1
-        self.dthrottle = 0.5
+        self.dP = 0.05
+        self.dI = 0.05
+        self.dD = 0.1
+        self.dthrottle = 0.1
         self.dgear = 1
-        self.dbrakes = 0.5
+        self.dbrakes = 0.1
 
         #ograniczenia na parametry
         self.maxP = 5
@@ -35,16 +35,16 @@ class Search:
         self.maxD = 20
         self.minD = 0
 
-        self.maxthrottle = 2.1
+        self.maxthrottle = 1
         self.minthrottle = 0
 
-        self.maxbrakes = 1.1
+        self.maxbrakes = 1
         self.minbrakes = 0
 
         self.maxgear = 6
         self.mingear = 0 #wsteczny nie potrzebny
 
-        self.stop_num_of_iterations = 30 # warunek stopu liczba iteracji
+        self.stop_num_of_iterations = 10 # warunek stopu liczba iteracji
         self.stop_time_change = 3 # warunek stopu - poprawa czasu o _ sek
         self.stop_best_time = -5 # warunek stopu - jesli czasu będzie poniżej wartości
 
@@ -90,6 +90,7 @@ class Search:
         self.plot_candidates_times_mean = []
 
         self.use_gaussian = False
+        self.use_changes = True
         self.solutionSize = len(self.solution.values)
 
         self.changes = [self.dP, self.dI, self.dD, self.dthrottle, self.dgear, self.dbrakes]
@@ -103,11 +104,18 @@ class Search:
         # najpierw generujemy początkową listę sąsiedztwa
         if(self.use_gaussian):
             self.generate_candidates_gaussian()
+        elif self.use_changes:
+            self.generate_candidates_changes()
         else:
             self.generate_candidates()
 
         # póżniej tylko aktualizujemy
-        iterations = 0
+        iterations = 1
+        self.plot_times.append(self.current_time)
+        self.plot_tabu_size.append(len(self.tabu_list))
+        self.plot_candidates_times_min.append(self.candidates_list[0][2])
+        self.plot_candidates_times_max.append(self.candidates_list[len(self.candidates_list) - 1][2])
+        self.plot_candidates_times_mean.append(np.mean([x[2] for x in self.candidates_list]))
         time_change = 0
         while iterations < self.stop_num_of_iterations and time_change < self.stop_time_change and self.current_time > self.stop_best_time: #warunki stopu
             self.iterate()
@@ -124,18 +132,26 @@ class Search:
             self.plot_candidates_times_mean.append(np.mean([x[2] for x in self.candidates_list]))
 
 
-            self.liTime.set_xdata(np.arange(iterations))
-            self.liTabuSize.set_xdata(np.arange(iterations))
-            self.liTabuUsage.set_xdata(np.arange(iterations))
+            #self.liTime.set_xdata(np.arange(iterations))
+            #self.liTabuSize.set_xdata(np.arange(iterations))
+            #self.liTabuUsage.set_xdata(np.arange(iterations))
 
-            self.liTime.set_ydata(self.plot_times)
-            self.liTabuSize.set_ydata(self.plot_tabu_size)
-            self.liTabuUsage.set_ydata(self.plot_tabu_used)
+            #self.liTime.set_ydata(self.plot_times)
+            #self.liTabuSize.set_ydata(self.plot_tabu_size)
+            #self.liTabuUsage.set_ydata(self.plot_tabu_used)
 
             print(self.current_time)
             print([x[2] for x in self.candidates_list])
-            plt.pause(0.01)
+            #plt.pause(0.01)
 
+
+        self.liTime.set_xdata(np.arange(iterations))
+        self.liTabuSize.set_xdata(np.arange(iterations))
+        self.liTabuUsage.set_xdata(np.arange(iterations))
+
+        self.liTime.set_ydata(self.plot_times)
+        self.liTabuSize.set_ydata(self.plot_tabu_size)
+        self.liTabuUsage.set_ydata(self.plot_tabu_used)
         self.ax1.plot(np.arange(iterations), self.plot_candidates_times_min)
         self.ax1.plot(np.arange(iterations), self.plot_candidates_times_max)
         self.ax1.plot(np.arange(iterations), self.plot_candidates_times_mean)
@@ -149,7 +165,7 @@ class Search:
             best_change = self.candidates_list[i]
             on_tabu_list = self.check_tabu_list(best_change[0], best_change[1])
             #kryterium aspiracji
-            if self.current_time - best_change[2] > self.aspiration_time:
+            if self.current_time - best_change[2] > self.aspiration_time and on_tabu_list:
                 on_tabu_list = False
                 print("Uzyte kryterium aspiracji. Poprawa czasu: ", self.current_time - best_change[2])
             i += 1
@@ -161,6 +177,9 @@ class Search:
         if(self.use_gaussian):
             self.modify_gaussian(best_change[0].to_list(), best_change[1], best_change[3])
             self.update_candidates_gaussian(best_change[1])
+        elif self.use_changes:
+            self.modify_changes(best_change[0].to_list(), best_change[1], best_change[3])
+            self.update_candidates_changes(best_change[1])
         else:
             self.solution.iloc[best_change[1]] = best_change[0].to_list()
             self.update_candidates(best_change[1])
@@ -188,7 +207,7 @@ class Search:
             minVals = [self.minP, self.minI, self.minD, self.minthrottle, self.mingear, self.minbrakes]
 
             for j in range(0, 5):
-                if parameters[j] + changes[j] < maxVals[j]:
+                if parameters[j] + changes[j] <= maxVals[j]:
                     parameters[j] += changes[j]
                 self.solution.iloc[i] = parameters.copy()
                 t = self.simulate(self.solution)
@@ -196,7 +215,7 @@ class Search:
 
                 parameters = x.copy()
 
-                if parameters[j] - changes[j] > minVals[j]:
+                if parameters[j] - changes[j] >= minVals[j]:
                     parameters[j] -= changes[j]
                 self.solution.iloc[i] = parameters.copy()
                 t = self.simulate(self.solution)
@@ -229,7 +248,7 @@ class Search:
 
 
         for j in range(0, 5):
-            if parameters[j] + changes[j] < maxVals[j]:
+            if parameters[j] + changes[j] <= maxVals[j]:
                 parameters[j] += changes[j]
             self.solution.iloc[i] = parameters.copy()
             t = self.simulate(self.solution)  # ZAMIENIC NA DOBRA SYMULACJE
@@ -237,7 +256,7 @@ class Search:
 
             parameters = x.copy()
 
-            if parameters[j] - changes[j] > minVals[j]:
+            if parameters[j] - changes[j] >= minVals[j]:
                 parameters[j] -= changes[j]
             self.solution.iloc[i] = parameters.copy()
             t = self.simulate(self.solution)
@@ -302,6 +321,57 @@ class Search:
                 self.solution.iloc[newPosition, changePosition] = self.minVals[changePosition]
             else:
                 self.solution.iloc[newPosition, changePosition] = solutionSum
+
+    def generate_candidates_changes(self):
+        for i in tqdm(range(0, len(self.solution.values)-1)):
+
+            #zmieniane po jednej wartosci - mniej przypadkow i zmiana 2 mozna rozbic na 2 zmiany po jednej zmiennej
+            #zmieniac nie tylko o dt - teraz strasznie wolno zmierza
+            parameters = [0, 0, 0, 0, 0, 0, 0]
+
+            for j in range(0, 5):
+                parameters[j] = self.changes[j]
+                modified = self.modify_changes(parameters, i, j)
+                t = self.simulate(self.solution)
+                self.candidates_list.append([PointSolution(parameters), i, t, j])
+                if modified:
+                    self.modify_changes((-1)*parameters, i, j)
+
+                parameters[j] = -self.changes[j]
+                modified = self.modify_changes(parameters, i, j)
+                t = self.simulate(self.solution)
+                self.candidates_list.append([PointSolution(parameters), i, t, j])
+                if modified:
+                    self.modify_changes((-1)*parameters, i, j)
+
+                parameters = [0, 0, 0, 0, 0, 0, 0]
+
+        self.candidates_list.sort(key=itemgetter(2))
+
+
+
+    def update_candidates_changes(self, i): #i - gdzie zmiana wystapila
+
+        #aktualizacja czasow - trzeba bo jak sie zmienia rozwiazanie to sie wszystko zmienia
+        for j in tqdm(range(len(self.candidates_list))):
+            index = self.candidates_list[j][1]
+            modified = self.modify_changes(self.candidates_list[j][0].to_list(), index, self.candidates_list[j][3])
+            self.candidates_list[j][2] = self.simulate(self.solution)
+            if modified:
+                self.modify_changes((-1)*self.candidates_list[j][0].to_list(), index, self.candidates_list[j][3])
+
+        self.candidates_list.sort(key=itemgetter(2))
+
+    def modify_changes(self, parameters, position, changePosition):
+        if len(parameters) == 0:
+            return False
+        solutionSum = self.solution.iloc[position][changePosition] + parameters[changePosition]
+        if solutionSum < self.maxVals[changePosition] and solutionSum > self.minVals[changePosition]:
+            self.solution.iloc[position, changePosition] = solutionSum
+            return True
+        else:
+            return False
+
 
     def update_tabu(self):
         for i in range(0, len(self.tabu_list)-2): #dla -1 czasem przekracza - jedno rozwiązanie puste jest
