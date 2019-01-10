@@ -57,9 +57,9 @@ class Game:
             pygame.display.flip()
         pygame.quit()
 
-    def run_pid_controller(self, solution_path='solutionOpt.csv', dt=0.05):
+    def run_pid_controller(self, track_path, solution_path='solutionOpt.csv', dt=0.05):
         car = Car(self.window_width / 20, self.window_height / 20)
-        track = Track('track6.svg')
+        track = Track(track_path)
         track_drawer = TrackDrawer(track)
         solution = pd.read_csv(solution_path, index_col=0)
         track.apply_deformations(list(solution.Deformation))
