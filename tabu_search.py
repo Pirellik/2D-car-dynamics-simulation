@@ -48,18 +48,20 @@ class Search:
         self.maxdeformation = 1
         self.mindeformation = 0
 
-        self.stop_num_of_iterations = 1 # warunek stopu liczba iteracji
+        self.stop_num_of_iterations = 100 # warunek stopu liczba iteracji
         self.stop_time_change = 3 # warunek stopu - poprawa czasu o _ sek
         self.stop_best_time = -5 # warunek stopu - jesli czasu będzie poniżej wartości
 
         # symulator do pobierania czasów przejazdu
         self.sim = Simulator(track)
 
-        self.first_time = self.simulate(self.solution) #czas dla rozwiązania początkowego
+        self.plot_simulation_indicators = []
+
+        self.first_time = self.simulate(self.solution, True) #czas dla rozwiązania początkowego
         self.current_time = self.first_time #przechowywany aktualny czas (można zmienić na tablice żeby zapisywać jak sie zmienialy czasy)
         self.best_time = self.first_time
 
-        self.num_of_iterations_tabu = 15 #ile iteracji ma zostac na liscie tabu
+        self.num_of_iterations_tabu = 40 #ile iteracji ma zostac na liscie tabu
 
         self.f0, self.ax0 = plt.subplots(1)
         self.f1, self.ax1 = plt.subplots(1)
@@ -82,7 +84,7 @@ class Search:
         self.liTabuSize, = self.ax2.plot([], [])
 
         self.ax3.set_xlim(0, self.stop_num_of_iterations)
-        self.ax3.set_ylim(0, 10)
+        self.ax3.set_ylim(0, 30)
         self.ax3.set_title("Tabu usage")
         self.liTabuUsage, = self.ax3.plot([], [])
 
@@ -118,8 +120,12 @@ class Search:
         self.plot_times.append(self.current_time)
         self.plot_tabu_size.append(len(self.tabu_list))
         self.plot_candidates_times_min.append(self.candidates_list[0][2])
-        self.plot_candidates_times_max.append(self.candidates_list[len(self.candidates_list) - 1][2])
-        self.plot_candidates_times_mean.append(np.mean([x[2] for x in self.candidates_list]))
+        max = 0
+        for j in range(len(self.candidates_list) - 1, 0, -1):
+            if self.candidates_list[j][2] < 99999:
+                max = self.candidates_list[j][2]
+        self.plot_candidates_times_max.append(max)
+        self.plot_candidates_times_mean.append(np.median([x[2] for x in self.candidates_list]))
         time_change = 0
         while iterations < self.stop_num_of_iterations and time_change < self.stop_time_change and self.current_time > self.stop_best_time: #warunki stopu
             self.iterate()
@@ -132,8 +138,13 @@ class Search:
             self.plot_times.append(self.current_time)
             self.plot_tabu_size.append(len(self.tabu_list))
             self.plot_candidates_times_min.append(self.candidates_list[0][2])
-            self.plot_candidates_times_max.append(self.candidates_list[len(self.candidates_list) - 1][2])
-            self.plot_candidates_times_mean.append(np.mean([x[2] for x in self.candidates_list]))
+            #self.plot_candidates_times_max.append(self.candidates_list[len(self.candidates_list) - 1][2])
+            max = 0
+            for j in range(len(self.candidates_list) - 1, 0, -1):
+                if self.candidates_list[j][2] < 99999:
+                    max = self.candidates_list[j][2]
+            self.plot_candidates_times_max.append(max)
+            self.plot_candidates_times_mean.append(np.median([x[2] for x in self.candidates_list]))
 
 
             #self.liTime.set_xdata(np.arange(iterations))
@@ -157,10 +168,55 @@ class Search:
         self.liTabuSize.set_ydata(self.plot_tabu_size)
         self.liTabuUsage.set_ydata(self.plot_tabu_used)
         self.ax1.plot(np.arange(iterations+1), self.plot_candidates_times_min, 'r', np.arange(iterations+1), self.plot_candidates_times_max, 'g', np.arange(iterations+1), self.plot_candidates_times_mean, 'b')
+        print(self.plot_candidates_times_min, self.plot_candidates_times_max, self.plot_candidates_times_mean)
         #self.ax1.plot(np.arange(iterations+1), self.plot_candidates_times_max)
         #self.ax1.plot(np.arange(iterations+1), self.plot_candidates_times_mean)
         #plt.plot(np.arange(iterations+1), self.plot_candidates_times_min, np.arange(iterations+1), self.plot_candidates_times_max, np.arange(iterations+1), self.plot_candidates_times_mean)
+
+        self.f4, self.ax4 = plt.subplots(1)
+        self.ax4.set_xlim(0, self.stop_num_of_iterations)
+        self.ax4.set_ylim(0, 200)
+        self.ax4.set_title("Path length")
+        self.ax4.plot(np.arange(iterations+1), [x[0] for x in self.plot_simulation_indicators])
+
+        self.f5, self.ax5 = plt.subplots(1)
+        self.ax5.set_xlim(0, self.stop_num_of_iterations)
+        self.ax5.set_ylim(2000, 12000)
+        self.ax5.set_title("RPM")
+        self.ax5.plot(np.arange(iterations + 1), [x[1] for x in self.plot_simulation_indicators], np.arange(iterations + 1), [x[10] for x in self.plot_simulation_indicators])
+
+        self.f6, self.ax6 = plt.subplots(1)
+        self.ax6.set_xlim(0, self.stop_num_of_iterations)
+        self.ax6.set_ylim(0, 120)
+        self.ax6.set_title("Speed")
+        self.ax6.plot(np.arange(iterations + 1), [x[2] for x in self.plot_simulation_indicators], np.arange(iterations + 1), [x[8] for x in self.plot_simulation_indicators])
+
+        self.f7, self.ax7 = plt.subplots(1)
+        self.ax7.set_xlim(0, self.stop_num_of_iterations)
+        self.ax7.set_ylim(0, 10)
+        self.ax7.set_title("Side slip")
+        self.ax7.plot(np.arange(iterations + 1), [x[3] for x in self.plot_simulation_indicators], np.arange(iterations + 1), [x[9] for x in self.plot_simulation_indicators])
+
+        self.f8, self.ax8 = plt.subplots(1)
+        self.ax8.set_xlim(0, self.stop_num_of_iterations)
+        self.ax8.set_ylim(0, 300)
+        self.ax8.set_title("Regulator indicators")
+        self.ax8.plot(np.arange(iterations + 1), [x[4] for x in self.plot_simulation_indicators], np.arange(iterations + 1), [x[5] for x in self.plot_simulation_indicators])
+
+        self.f10, self.ax10 = plt.subplots(1)
+        self.ax10.set_xlim(0, self.stop_num_of_iterations)
+        self.ax10.set_ylim(0, 10)
+        self.ax10.set_title("Max Line Error")
+        self.ax10.plot(np.arange(iterations + 1), [x[6] for x in self.plot_simulation_indicators])
+
+        self.f9, self.ax9 = plt.subplots(1)
+        self.ax9.set_xlim(0, self.stop_num_of_iterations)
+        self.ax9.set_ylim(0, 1000)
+        self.ax9.set_title("Slip indicator")
+        self.ax9.plot(np.arange(iterations + 1), [x[7] for x in self.plot_simulation_indicators])
+        print(self.candidates_list)
         plt.pause(6000)
+
 
     def iterate(self):
         on_tabu_list = True
@@ -188,15 +244,18 @@ class Search:
         else:
             self.solution.iloc[best_change[1]] = best_change[0].to_list()
             self.update_candidates(best_change[1])
-        #self.current_time = self.simulate(self.solution)
-        self.current_time = best_change[2]
+        self.current_time = self.simulate(self.solution, True)
+        #self.current_time = best_change[2]
         self.update_tabu()
 
 
 
 
-    def simulate(self, solution):
-        return self.sim.run(0.05, solution)
+    def simulate(self, solution, save_indicators=False):
+        t, indicators = self.sim.run(0.05, solution)
+        if save_indicators:
+            self.plot_simulation_indicators.append(indicators)
+        return t
 
     def generate_candidates(self):
         for i in tqdm(range(0, len(self.solution.values)-1)):
